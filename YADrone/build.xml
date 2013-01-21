@@ -1,0 +1,79 @@
+<?xml version="1.0"?>
+
+<project name="YADrone" default="dist" basedir=".">
+
+	<path id="dist.classpath">
+		<fileset dir="lib" includes="**/*.jar **/*.zip" />
+	</path>
+	<property name="dist.dir.location" location="dist" />
+		
+	<property name="classpath" refid="dist.classpath"/>
+	
+	<property name="src.includes" value="**/*.xml **/*.png **/*.jpg"/>
+	<!--<property name="dist.excludes" value="**/mydir/**" />-->
+
+	<target name="copyResources" description="Create dist-directories, copy all source- and lib-files">
+		<mkdir dir="bin"/>
+		<copy todir="bin">
+			<fileset dir="src" includes="${src.includes}" excludes="${dist.excludes}"/>
+		</copy>
+	</target>
+
+	<!-- Compile the sources. -->
+	<target name="compile" depends="copyResources" description="Compile the sources">
+		<javac debug="true" srcdir="src" destdir="bin" excludes="sample/** **/test/**.*" includeantruntime="false">
+			<classpath>
+				<pathelement path="${classpath}"/>
+			    <fileset dir="lib" includes="**/*.jar" />
+			</classpath>
+		</javac>
+	</target>
+
+	<!-- Create the jar file. -->
+	<target name="dist" depends="compile" description="Create the jar file">
+		<mkdir dir="dist"/>
+		<mkdir dir="dist/lib"/>
+		
+		<!-- prepare the manifest classpath -->
+		<path id="manifest.classpath">
+			<fileset dir="dist/lib">
+				<include name="**/*.*" />
+			</fileset>
+		</path>
+		<!-- convert lib folder to string property for use in manifest classpath -->
+		<pathconvert targetos="unix" property="string.classpath" pathsep=" ">
+			<path refid="manifest.classpath" />
+			<map from="${dist.dir.location}" to="." />
+		</pathconvert>
+
+		
+		<jar destfile="dist/yadrone_021.jar">
+			<fileset dir="bin" includes="**/**" />
+			
+			<manifest>
+				<attribute name="Main-Class" value="gui_desktop.YADroneControlCenter"/>
+				<attribute name="Class-Path" value="${string.classpath}"/>
+			</manifest>
+		</jar>
+		
+		<copy todir="dist/lib">
+			<fileset dir="lib" includes="**/*.jar" excludes=""/>
+		</copy>
+	</target>
+	
+	<target name="run" depends="dist" description="Run Control Center">
+		<java classname="gui_desktop.YADroneControlCenter" failonerror="true" fork="true">
+			<classpath>
+				<fileset dir="dist" includes="*.jar" />
+			    <fileset dir="dist/lib" includes="*.jar" />
+			</classpath>
+		</java> 	
+	</target>
+	
+	<!-- Remove generated files. -->
+	<target name="clean" description="Remove generated files">
+		<delete dir="bin" />
+		<delete dir="dist" />
+	</target>
+</project>
+

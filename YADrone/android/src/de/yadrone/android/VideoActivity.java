@@ -10,7 +10,7 @@ import android.view.MenuItem;
 import android.widget.VideoView;
 
 import com.shigeodayo.ardrone.ARDrone;
-import com.shigeodayo.ardrone.command.CommandManager;
+import de.yadrone.base.command.CommandManager;
 
 public class VideoActivity extends Activity {
 

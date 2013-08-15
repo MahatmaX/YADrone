@@ -1,17 +1,23 @@
 YADrone - Yet Another Drone Framework 
 ===============================================
 
-YADrone is yet another open framework for controlling the AR.Drone 2. It is mainly based on the ARDroneForP5 project and adds some bug fixes and features. Among the changes are:
+YADrone is yet another open framework for controlling the AR.Drone 2. It features:
 
-* Video support for the AR.Drone 2
-* Integrated the Navdata listener from the Javadrone project to access all sensor readings
-* A control center that visualizes flight behaviour and sensor readings
-* Fixed the command manager so that hovering now works
+* Easy, yet powerful framework to control the drone
+* Support for sensor readings and NavData, video and drone configuration
+* A control center that visualizes sensor readings and allows to control the drone via keyboard
 * Also supports Android (but no video)
+* Framework is 100% pure Java and is easily extensible 
 
-Of course, YADrone is still beta. There are some known bugs, but these mainly concern the control center and will be fixed someday soon. And YADrone is open and contributions are warmly welcome. 
+Of course, YADrone is still beta. There are some minor (known) bugs, but these mainly concern the control center and will be fixed someday soon.
+Nevertheless, you use this framework at your own risk. It is provided as is and YOU are responsible for any harm or drone damage. Please be careful !
 
-For further information please see
+YADrone is open: comments, bug reports and contributions are warmly welcome ! 
+
+YADrone was initially based on the ARDroneForP5 project and added a NavData parser from the Javadrone project. Eventually, the code has been rebased on the lab-drone project a former extension of YADrone.
+Credits and thanks go to all guys working on these projects ! 
+
+For further information, documentation and tutorials please see
 http://vsis-www.informatik.uni-hamburg.de/projects/yadrone/index.html
 
 Never worked with Github before ?

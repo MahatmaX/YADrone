@@ -9,8 +9,8 @@ import android.view.MenuItem;
 import android.widget.TextView;
 
 import com.shigeodayo.ardrone.ARDrone;
-import com.shigeodayo.ardrone.navdata.javadrone.NavData;
-import com.shigeodayo.ardrone.navdata.javadrone.NavDataListener;
+import de.yadrone.base.navdata.javadrone.NavData;
+import de.yadrone.base.navdata.javadrone.NavDataListener;
 
 public class NavDataActivity extends Activity {
 

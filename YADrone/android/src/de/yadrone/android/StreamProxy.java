@@ -15,8 +15,8 @@ import java.net.UnknownHostException;
 import android.os.AsyncTask;
 import android.util.Log;
 
-import com.shigeodayo.ardrone.command.CommandManager;
-import com.shigeodayo.ardrone.utils.ARDroneUtils;
+import de.yadrone.base.command.CommandManager;
+import de.yadrone.base.utils.ARDroneUtils;
 
 public class StreamProxy implements Runnable
 {

@@ -47,11 +47,11 @@
 		</pathconvert>
 
 		
-		<jar destfile="dist/yadrone_021.jar">
+		<jar destfile="dist/yadrone_03.jar">
 			<fileset dir="bin" includes="**/**" />
 			
 			<manifest>
-				<attribute name="Main-Class" value="gui_desktop.YADroneControlCenter"/>
+				<attribute name="Main-Class" value="de.yadrone.apps.controlcenter.YADroneControlCenter"/>
 				<attribute name="Class-Path" value="${string.classpath}"/>
 			</manifest>
 		</jar>
@@ -62,7 +62,7 @@
 	</target>
 	
 	<target name="run" depends="dist" description="Run Control Center">
-		<java classname="gui_desktop.YADroneControlCenter" failonerror="true" fork="true">
+		<java classname="de.yadrone.apps.controlcenter.YADroneControlCenter" failonerror="true" fork="true">
 			<classpath>
 				<fileset dir="dist" includes="*.jar" />
 			    <fileset dir="dist/lib" includes="*.jar" />

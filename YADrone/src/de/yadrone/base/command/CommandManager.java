@@ -325,6 +325,7 @@ public class CommandManager extends AbstractManager {
 	}
 
 	public void setOutdoor(boolean flying_outdoor, boolean outdoor_hull) {
+		System.out.println("CommandManager: setOutdoor(flyingOutdoor,usingOutdoorHull) = " + flying_outdoor + "," + outdoor_hull);
 		q.add(new ConfigureCommand("control:outdoor", flying_outdoor));
 		q.add(new ConfigureCommand("control:flight_without_shell", outdoor_hull));
 	}
@@ -578,6 +579,8 @@ public class CommandManager extends AbstractManager {
 		sendMisc(2, 20, 2000, 3000);
 		freeze();
 		landing();
+		
+		setOutdoor(false, false);
 	}
 
 	private synchronized void sendCommand(ATCommand c) throws InterruptedException, IOException {

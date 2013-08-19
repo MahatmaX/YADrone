@@ -22,11 +22,16 @@ public class SpeedPanel extends JPanel implements ICCPlugin
 {
 	private IARDrone drone;
 	
-	private JSlider slider;
+	private JSlider speedSlider;
+	private JSlider eulerSlider;
 	
-	private int slowest = 0;
-	private int fastest = 100;
+	private int speedSlowest = 0;
+	private int speedFastest = 100;
  
+	private int eulerSlowest = 0;
+	private int eulerFastest = 52;
+	private int eulerDefaultSpeed = 25;
+	
 	public SpeedPanel()
 	{
 		super(new GridBagLayout());
@@ -37,7 +42,7 @@ public class SpeedPanel extends JPanel implements ICCPlugin
 		
 		public void speedUpdated(int speed)
 		{
-			slider.setValue(speed);
+			speedSlider.setValue(speed);
 		}
 	};
 	
@@ -45,22 +50,40 @@ public class SpeedPanel extends JPanel implements ICCPlugin
 	{
 		this.drone = drone;
 		
-		slider = new JSlider(JSlider.VERTICAL, slowest, fastest, drone.getSpeed());
-		slider.setPaintTicks(true);
-		slider.setPaintLabels(true);
-		slider.setMinorTickSpacing(10);
-		slider.setMajorTickSpacing(30);
-		slider.setBackground(Color.WHITE);
+		speedSlider = new JSlider(JSlider.VERTICAL, speedSlowest, speedFastest, drone.getSpeed());
+		speedSlider.setPaintTicks(true);
+		speedSlider.setPaintLabels(true);
+		speedSlider.setMinorTickSpacing(10);
+		speedSlider.setMajorTickSpacing(25);
+		speedSlider.setBackground(Color.WHITE);
 		
-		slider.addChangeListener(new ChangeListener() {
+		speedSlider.addChangeListener(new ChangeListener() {
 			public void stateChanged(ChangeEvent e)
 			{
-				drone.setSpeed(slider.getValue());
+				drone.setSpeed(speedSlider.getValue());
 			}
 		});
 		
-		add(slider, new GridBagConstraints(0,0,1,1,1,1,GridBagConstraints.NORTH, GridBagConstraints.BOTH, new Insets(0,0,5,0), 0, 0));
-		add(new JLabel("Speed"), new GridBagConstraints(0,1,1,1,1,0,GridBagConstraints.SOUTH, GridBagConstraints.NONE, new Insets(0,0,5,0), 0, 0));
+		eulerSlider = new JSlider(JSlider.VERTICAL, eulerSlowest, eulerFastest, eulerDefaultSpeed);
+		eulerSlider.setPaintTicks(true);
+		eulerSlider.setPaintLabels(true);
+		eulerSlider.setMinorTickSpacing(5);
+		eulerSlider.setMajorTickSpacing(10);
+		eulerSlider.setBackground(Color.WHITE);
+		
+		eulerSlider.addChangeListener(new ChangeListener() {
+			public void stateChanged(ChangeEvent e)
+			{
+				drone.getCommandManager().setMaxEulerAngle(eulerSlider.getValue() / 100);
+			}
+		});
+		
+		
+		add(speedSlider, new GridBagConstraints(0,0,1,1,0.5,1,GridBagConstraints.FIRST_LINE_START, GridBagConstraints.VERTICAL, new Insets(0,0,5,0), 0, 0));
+		add(new JLabel("Speed in %"), new GridBagConstraints(0,1,1,1,0.5,0,GridBagConstraints.SOUTH, GridBagConstraints.NONE, new Insets(0,0,5,0), 0, 0));
+		
+		add(eulerSlider, new GridBagConstraints(1,0,1,1,0.5,1,GridBagConstraints.FIRST_LINE_START, GridBagConstraints.VERTICAL, new Insets(0,0,5,0), 0, 0));
+		add(new JLabel("Euler Angle"), new GridBagConstraints(1,1,1,1,0.5,0,GridBagConstraints.SOUTH, GridBagConstraints.NONE, new Insets(0,0,5,0), 0, 0));
 		
 		drone.addSpeedListener(speedListener);
 	}
@@ -87,7 +110,7 @@ public class SpeedPanel extends JPanel implements ICCPlugin
 
 	public Dimension getScreenSize()
 	{
-		return new Dimension(60, 200);
+		return new Dimension(150, 200);
 	}
 	
 	public Point getScreenLocation()

@@ -581,6 +581,7 @@ public class CommandManager extends AbstractManager {
 		landing();
 		
 		setOutdoor(false, false);
+		setMaxEulerAngle(0.25f);
 	}
 
 	private synchronized void sendCommand(ATCommand c) throws InterruptedException, IOException {

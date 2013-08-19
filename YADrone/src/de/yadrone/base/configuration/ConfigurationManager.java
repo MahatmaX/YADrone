@@ -70,7 +70,6 @@ public class ConfigurationManager extends AbstractTCPManager {
 							// happens if the last byte happens to coincide with the end of the buffer
 						}
 						String s = builder.toString();
-						System.out.println(s);
 						if (listener != null) {
 							listener.result(s);
 						}

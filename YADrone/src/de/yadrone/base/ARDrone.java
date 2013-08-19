@@ -50,7 +50,7 @@ public class ARDrone implements IARDrone {
 	// The speed setting has been moved into this class to allow the commandmanager to stay simple and to be able to do
 	// more advanced speed calculations for example based on the actual velocity
 	// Should we refactor this into a separate API?
-	private int speed = 1;
+	private int speed = 25;
 	private Set<ISpeedListener> speedListener = null;
 
 	/** constructor */

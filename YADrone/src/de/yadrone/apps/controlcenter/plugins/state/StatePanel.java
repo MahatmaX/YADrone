@@ -95,12 +95,12 @@ public class StatePanel extends JPanel implements ICCPlugin
 	{
 		this.drone = drone;
 		
-		drone.getNavDataManager().setStateListener(stateListener);
+		drone.getNavDataManager().addStateListener(stateListener);
 	}
 
 	public void deactivate()
 	{
-		drone.getNavDataManager().setStateListener(null);
+		drone.getNavDataManager().removeStateListener(stateListener);
 	}
 
 	public String getTitle()

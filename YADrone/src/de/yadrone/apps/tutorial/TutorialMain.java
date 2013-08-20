@@ -21,7 +21,7 @@ public class TutorialMain
 
 			System.out.println("Successfully connected to the drone");
 			
-			drone.getNavDataManager().setAttitudeListener(new AttitudeListener() {
+			drone.getNavDataManager().addAttitudeListener(new AttitudeListener() {
 				
 				public void attitudeUpdated(float pitch, float roll, float yaw)
 				{

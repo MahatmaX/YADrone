@@ -40,9 +40,9 @@ public class AttitudeChart
 		this.pitchSeries = new TimeSeries("Pitch", "Degree", "Time");
 		this.rollSeries = new TimeSeries("Roll", "Degree", "Time");
 
-		yawSeries.setMaximumItemCount(500);
-		pitchSeries.setMaximumItemCount(500);
-		rollSeries.setMaximumItemCount(500);
+		yawSeries.setMaximumItemCount(1000);
+		pitchSeries.setMaximumItemCount(1000);
+		rollSeries.setMaximumItemCount(1000);
 		
 		dataset = new TimeSeriesCollection();
 		dataset.addSeries(this.yawSeries);
@@ -87,8 +87,8 @@ public class AttitudeChart
 		domain.setTickLabelsVisible(true);
 		
 		range.setAutoRange(false);
-		range.setUpperBound(90);
-		range.setLowerBound(-90);
+		range.setUpperBound(180);
+		range.setLowerBound(-180);
 		range.setAutoRangeIncludesZero(true);
 		range.setStandardTickUnits(NumberAxis.createIntegerTickUnits());
 		

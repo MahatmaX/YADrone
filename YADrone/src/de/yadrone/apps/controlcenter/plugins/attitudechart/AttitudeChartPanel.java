@@ -53,12 +53,12 @@ public class AttitudeChartPanel extends JPanel implements ICCPlugin
 	{
 		this.drone = drone;
 		
-		drone.getNavDataManager().setAttitudeListener(attitudeListener);
+		drone.getNavDataManager().addAttitudeListener(attitudeListener);
 	}
 
 	public void deactivate()
 	{
-		drone.getNavDataManager().setAttitudeListener(null);
+		drone.getNavDataManager().removeAttitudeListener(attitudeListener);
 	}
 
 	public String getTitle()

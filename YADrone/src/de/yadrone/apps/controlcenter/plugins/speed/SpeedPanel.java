@@ -74,7 +74,7 @@ public class SpeedPanel extends JPanel implements ICCPlugin
 		eulerSlider.addChangeListener(new ChangeListener() {
 			public void stateChanged(ChangeEvent e)
 			{
-				drone.getCommandManager().setMaxEulerAngle(eulerSlider.getValue() / 100);
+				drone.getCommandManager().setMaxEulerAngle(eulerSlider.getValue() / 100f);
 			}
 		});
 		

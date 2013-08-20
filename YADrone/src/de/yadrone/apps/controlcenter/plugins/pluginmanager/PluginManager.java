@@ -8,7 +8,10 @@ import java.awt.Insets;
 import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 
 import javax.swing.BorderFactory;
@@ -37,17 +40,27 @@ public class PluginManager extends JPanel implements ICCPlugin
 		
 		// look for all classes implementing the Plugin interface
 		Reflections reflections = new Reflections();
-		Set subTypes = reflections.getSubTypesOf(ICCPlugin.class);
+		Set subTypes = reflections.getSubTypesOf(ICCPlugin.class); // this set contains Class objects
+		
+		// we need a String list, because we want to sort the list alphabetically
+		List<String> sortedList = new ArrayList<String>();
 		Iterator iter = subTypes.iterator();
 		while (iter.hasNext())
 		{
-			Class pluginClass = (Class)iter.next();
-			if (pluginClass == PluginManager.class)
-				continue; // do not instantiate the PluginManager once more
-			
+			sortedList.add(((Class)iter.next()).getName());
+		}
+		Collections.sort(sortedList);
+		
+		// now we have a sorted list of class names and can go for creating panels
+		for (int i=0; i < sortedList.size(); i++)
+		{
 			// for each plugin class a new panel (with a button to (de)activate the plugin) is created
 			try
 			{
+				Class pluginClass = Class.forName(sortedList.get(i));
+				if (pluginClass == PluginManager.class)
+					continue; // do not instantiate the PluginManager once more
+				
 				ICCPlugin plugin = (ICCPlugin)pluginClass.newInstance();
 				
 				JPanel panel = createPluginPanel(plugin);
@@ -56,7 +69,7 @@ public class PluginManager extends JPanel implements ICCPlugin
 			catch (Exception e)
 			{
 				e.printStackTrace();
-				JPanel panel = createErrorPanel(pluginClass, e);
+				JPanel panel = createErrorPanel(sortedList.get(i), e);
 				contentPane.add(panel, new GridBagConstraints(0,contentPane.getComponentCount(),1,1,1,0,GridBagConstraints.FIRST_LINE_START, GridBagConstraints.HORIZONTAL, new Insets(0,0,0,0), 0, 0));
 			}
 		}
@@ -126,10 +139,10 @@ public class PluginManager extends JPanel implements ICCPlugin
 		return panel;
 	}
 	
-	private JPanel createErrorPanel(Class pluginClass, Exception exc)
+	private JPanel createErrorPanel(String pluginClass, Exception exc)
 	{
 		JPanel panel = new JPanel(new GridBagLayout());
-		panel.setBorder(BorderFactory.createTitledBorder(pluginClass.getName()));
+		panel.setBorder(BorderFactory.createTitledBorder(pluginClass));
 		panel.add(new JLabel("<html><font color=#ff0000>Failed to load plugin: " + exc.getMessage() + " (" + exc.getClass().getSimpleName() + ")</font></html>"), new GridBagConstraints(0,0,1,1,1,0,GridBagConstraints.FIRST_LINE_START, GridBagConstraints.HORIZONTAL, new Insets(0,10,0,0), 0, 0));
 		
 		return panel;

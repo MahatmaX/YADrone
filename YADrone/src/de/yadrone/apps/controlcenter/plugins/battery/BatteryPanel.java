@@ -77,7 +77,6 @@ public class BatteryPanel extends JPanel implements ICCPlugin
 	{
 		this.drone = drone;
 		drone.getNavDataManager().addBatteryListener(batteryListener);
-		drone.getNavDataManager().add(batteryListener);
 	}
 
 	public void deactivate()

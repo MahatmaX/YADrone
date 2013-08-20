@@ -93,7 +93,7 @@ public class ConfigurationPanel extends JPanel implements ICCPlugin
 			SwingUtilities.invokeLater(new Runnable() {
 				public void run()
 				{
-					System.out.println("Set new Text : " + s);
+//					System.out.println("Set new Text : " + s);
 					text.setText(s);
 				}
 			});

@@ -238,7 +238,6 @@ public class NavDataManager extends AbstractManager {
 
 	@Override
 	public void run() {
-		System.out.println("Started " + getClass().getSimpleName());
 		connect(ARDroneUtils.NAV_PORT);
 		ticklePort(ARDroneUtils.NAV_PORT);
 		boolean bootstrapping = true;
@@ -254,7 +253,7 @@ public class NavDataManager extends AbstractManager {
 
 				DroneState s = parse(buffer);
 
-				// according to 7.1.2. of the ARDrone Developpper Guide demo
+				// according to 7.1.2. of the ARDrone Developer Guide demo
 				// mode must be set after exiting bootstrap mode
 				// TODO can we receive multiple bootstrap packets?
 				if (bootstrapping) {

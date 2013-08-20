@@ -61,7 +61,7 @@ public abstract class AbstractManager implements Runnable {
 	}
 
 	public void stop() {
-		System.out.println("Stopping " + getClass().getSimpleName());
+		System.out.println("AbstractManager: Stopping " + getClass().getSimpleName());
 		if (thread != null) {
 			thread.interrupt();
 			doStop = true;
@@ -83,7 +83,7 @@ public abstract class AbstractManager implements Runnable {
 	}
 
 	public void start() {
-		System.out.println("Starting " + getClass().getSimpleName());
+		System.out.println("AbstractManager: Starting " + getClass().getSimpleName());
 		if (thread == null) {
 			doStop = false;
 			String name = getClass().getSimpleName();

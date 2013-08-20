@@ -14,42 +14,21 @@ public class TutorialMain
 		IARDrone drone = null;
 		try
 		{
+			// Tutorial Section 1
 			drone = new ARDrone();
-
-			// prepare the CommandManager to send AT commands to the drone
 			drone.start();
-
-			System.out.println("Successfully connected to the drone");
 			
-			drone.getNavDataManager().addAttitudeListener(new AttitudeListener() {
-				
-				public void attitudeUpdated(float pitch, float roll, float yaw)
-				{
-//			    	System.out.println("Pitch: " + pitch + " Roll: " + roll + " Yaw: " + yaw);
-				}
-
-				public void attitudeUpdated(float pitch, float roll) { }
-				public void windCompensation(float pitch, float roll) { }
-			});
+			// Tutorial Section 2
+			new TutorialAttitudeListener(drone);
 			
+			// Tutorial Section 3
 			new TutorialVideoListener(drone);
 			
-			drone.getCommandManager().setLedsAnimation(LEDAnimation.BLINK_ORANGE, 3, 10);
-			
-//			System.out.println("Takeoff");
-//			drone.getCommandManager().takeOff();
-//			Thread.sleep(5000);
-//			System.out.println("Spin left");
-//			drone.getCommandManager().spinLeft(50);
-//			Thread.sleep(5000);
-//			System.out.println("Spin right");
-//			drone.getCommandManager().spinRight(50);
-//			Thread.sleep(5000);
-//			System.out.println("Land");
-//			drone.getCommandManager().landing();
-//			Thread.sleep(5000);
-//			System.out.println("Emergency");
-//			drone.getCommandManager().emergency();
+			// Tutorial Section 4
+			TutorialCommander commander = new TutorialCommander(drone);
+			commander.animateLEDs();
+//			commander.takeOffAndLand();
+//			commander.leftRightForwardBackward();
 		}
 		catch (Exception exc)
 		{

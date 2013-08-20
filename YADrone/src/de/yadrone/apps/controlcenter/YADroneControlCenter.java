@@ -18,7 +18,6 @@ public class YADroneControlCenter
 			System.out.println("Connect drone controller");
 			ardrone.start();
 			
-			ardrone.setMaxAltitude(5000); // max 5 meters
 			new CCFrame(ardrone);
 		}
 		catch(Exception exc)

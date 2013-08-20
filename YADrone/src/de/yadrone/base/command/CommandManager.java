@@ -19,7 +19,6 @@ package de.yadrone.base.command;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MalformedURLException;
@@ -35,7 +34,6 @@ import org.apache.commons.net.ftp.FTPClient;
 import org.apache.commons.net.ftp.FTPFile;
 import org.apache.commons.net.ftp.FTPFileFilter;
 import org.apache.commons.net.ftp.FTPReply;
-
 
 import de.yadrone.base.manager.AbstractManager;
 import de.yadrone.base.navdata.CadType;
@@ -153,71 +151,126 @@ public class CommandManager extends AbstractManager {
 		return (float) (speed / 100.0f);
 	}
 
+	/**
+	 * Set the current FPS of the live video codec.
+	 * @param fps  frames per second (min=15, max=30)
+	 */
 	public void setVideoCodecFps(int fps) {
 		fps = limit(fps, H264.MIN_FPS, H264.MAX_FPS);
 		q.add(new ConfigureCommand("video:codec_fps", fps));
 	}
 
 	/**
-	 * Sets the automatic bitrate control of the video stream.
+	 * Sets the automatic bitrate control of the video stream. Enabling this configuration will reduce the bandwidth
+	 * used by the video stream under bad Wi-Fi conditions, reducing the commands latency.
+	 * @param mode  VideoBitRateMode.DISABLED  Bitrate set to video:max_bitrate
+	 *              VideoBitRateMode.DYNAMIC  Video bitrate varies in [250;video:max_bitrate] kbps
+	 *              VideoBitRateMode.MANUAL  Video stream bitrate is fixed by the video:bitrate key
 	 */
 	public void setVideoBitrateControl(VideoBitRateMode mode) {
 		q.add(new ConfigureCommand("video:bitrate_control_mode", mode.ordinal()));
 	}
 
+	/**
+	 * Sets the current bitrate of the video transmission (kilobits per second)
+	 * @param rate  bitrate (min=250, max=4000)
+	 */
 	public void setVideoBitrate(int rate) {
 		rate = limit(rate, H264.MIN_BITRATE, H264.MAX_BITRATE);
 		q.add(new ConfigureCommand("video:bitrate", rate));
 	}
 
+	/**
+	 * Sets the maximum bitrate of the video transmission (kilobits per second)
+	 * @param rate  bitrate (min=250, max=4000)
+	 */
 	public void setMaxVideoBitrate(int rate) {
 		rate = limit(rate, H264.MIN_BITRATE, H264.MAX_BITRATE);
 		q.add(new ConfigureCommand("video:max_bitrate", rate));
 	}
 
+	/**
+	 * Set the current video codec of the AR.Drone.
+	 * Possible codec values for AR.Drone 2.0 are :
+	 * MP4_360P_CODEC : Live stream with MPEG4.2 soft encoder. No record stream.
+	 * H264_360P_CODEC : Live stream with H264 hardware encoder configured in 360p mode. No record stream.
+	 * MP4_360P_H264_720P_CODEC : Live stream with MPEG4.2 soft encoder. Record stream with H264 hardware encoder in 720p mode.
+	 * H264_720P_CODEC : Live stream with H264 hardware encoder configured in 720p mode. No record stream.
+	 * MP4_360P_H264_360P_CODEC : Live stream with MPEG4.2 soft encoder. Record stream with H264 hardware encoder in 360p mode.
+	 * @param c  The video codec to use.
+	 */
 	public void setVideoCodec(VideoCodec c) {
 		q.add(new ConfigureCommand("video:video_codec", c.getValue()));
 	}
 
+	/**
+	 * If this key is set to "TRUE" and a USB key with >100Mb of freespace is connected, the record
+	 * video stream will be recorded on the USB key.
+	 * @param b  If TRUE, video stream will be recorded
+	 */
 	public void setVideoOnUsb(boolean b) {
 		q.add(new ConfigureCommand("video:video_on_usb", b));
 	}
 
-	public void setVideoData(boolean b) {
-		q.add(new ConfigureCommand("general:video_enable", b));
-	}
+//	Reserved for future use, The default value is TRUE.
+//	public void setVideoData(boolean b) {
+//		q.add(new ConfigureCommand("general:video_enable", b));
+//	}
 
+	/**
+	 * The drone can either send a reduced set of navigation data (navdata) to its clients, or send all the available information
+	 * which contain many debugging information that are useless for everyday flights.
+	 * @param b  If set to TRUE, a reduced set is sent. If set to FALSE, all the available data are sent.
+	 */
 	public void setNavDataDemo(boolean b) {
 		q.add(new ConfigureCommand("general:navdata_demo", b));
 	}
 
+	/**
+	 * When using navdata_demo, this configuration allows the application to ask for others navdata packets.
+	 * @param mask  I honestly do not know, where values for this mask are defined. Have a look at the User Guide (page 74 in v2.0.1)
+	 */
 	public void setNavDataOptions(int mask) {
 		q.add(new ConfigureCommand("general:navdata_options", mask));
 	}
 
+	/**
+	 * Animate the LED lights.
+	 * @param anim  The animation.
+	 * @param freq  It's frequency
+	 * @param duration  The duration in seconds
+	 */
 	public void setLedsAnimation(LEDAnimation anim, float freq, int duration) {
 		q.add(new LEDAnimationCommand(anim, freq, duration));
 	}
 
+	/**
+	 * Activate this in order to detect outdoor hulls. Deactivate to detect indoor hulls.
+	 * @param b  TRUE for outdoor, FALSE for indoor hulls
+	 */
 	public void setDetectEnemyWithoutShell(boolean b) {
-		q.add(new ConfigureCommand("detect:enemy_colors", (b ? "1" : "0")));
+		q.add(new ConfigureCommand("detect:enemy_without_shell", (b ? "1" : "0")));
 	}
 
-	// TODO Developer guide uses hex representation in the command;
-	// is this necessary?
-	public void setGroundStripeColors(GroundStripeColor c) {
-		q.add(new ConfigureCommand("detect:enemy_colors", c.getValue()));
-	}
+//	Only for ARDrone 1.0 with legacy groundstripe detection.
+//	public void setGroundStripeColors(GroundStripeColor c) {
+//		q.add(new ConfigureCommand("detect:groundstripe_colors", c.getValue()));
+//	}
 
+	/**
+	 * The color of the hulls you want to detect.
+	 * @param c  Possible values are green (1), yellow (2) and blue (3)
+	 */
 	public void setEnemyColors(EnemyColor c) {
 		q.add(new ConfigureCommand("detect:enemy_colors", c.getValue()));
 	}
 
-	/*
-	 * Select the detection that should be enabled Note: It is advised to enable the multiple detection mode, and then
-	 * configure the detection needed using the other methods
+	/**
+	 * Select the detection that should be enabled 
+	 * Note: It is advised to enable the multiple detection mode, and then configure the detection needed using the following keys.
 	 * 
-	 * NOTE: You should NEVER enable one detection on two different cameras.
+	 * NOTE: The multiple detection mode allow the selection of different detections on each camera. 
+	 * Note that you should NEVER enable two similar detection on both cameras, as this will cause failures in the algorithms
 	 */
 	public void setDetectionType(CadType type) {
 		// TODO: push VisionCadType into special ConfigureCommand
@@ -225,11 +278,12 @@ public class CommandManager extends AbstractManager {
 		q.add(new ConfigureCommand("detect:detect_type", t));
 	}
 
-	/*
-	 * Select the detections that should be enabled on a specific camera.
+	/**
+	 * Select the detection that should be enabled 
+	 * Note: It is advised to enable the multiple detection mode, and then configure the detection needed using the following keys.
 	 * 
-	 * 
-	 * NOTE: You should NEVER enable one detection on two different cameras.
+	 * NOTE: The multiple detection mode allow the selection of different detections on each camera. 
+	 * Note that you should NEVER enable two similar detection on both cameras, as this will cause failures in the algorithms
 	 */
 	public void setDetectionType(DetectionType dt, VisionTagType[] tagtypes) {
 		int mask = VisionTagType.getMask(tagtypes);
@@ -259,6 +313,12 @@ public class CommandManager extends AbstractManager {
 		q.add(new RawCaptureCommand(picture, video));
 	}
 
+	/**
+	 * This configuration describes how the drone will interprete the progressive commands from the user.
+	 * In the combined yaw mode, the roll commands are used to generate roll+yaw based turns. 
+	 * This is intended to be an easier control mode for racing games.
+	 * @param b  TRUE, to enable combined raw mode, FALSE to disable.
+	 */
 	public void setEnableCombinedYaw(boolean b) {
 		int level = 1;
 		if (b) {
@@ -267,55 +327,127 @@ public class CommandManager extends AbstractManager {
 		q.add(new ConfigureCommand("control:control_level", level));
 	}
 
+	/**
+	 * Since 1.5.1 firmware, the AR.Drone has two different flight modes. The first is the legacy FreeFlight mode, where the
+	 * user controls the drone, an a new semi-autonomous mode, called "HOVER_ON_TOP_OF_ROUNDEL", where the
+	 * drones will hover on top of a ground tag. This new flying mode was developped for 2011 CES autonomous demonstration.
+	 * Since 2.0 and 1.10 firmwares, a third mode, called "HOVER_ON_TOP_OF_ORIENTED_ROUDNEL", was
+	 * added. This mode is the same as the previous one, except that the AR.Drone will always face the same direction.
+	 * @param mode
+	 */
 	public void setFlyingMode(FlyingMode mode) {
 		q.add(new ConfigureCommand("control:flying_mode", mode.ordinal()));
 	}
 
+	/**
+	 * This setting is used when CONTROL:flying_mode is set to "HOVER_ON_TOP_OF_(ORIENTED_)ROUNDEL". It
+	 * gives the AR.Drone the maximum distance (in millimeters) allowed between the AR.Drone and the oriented roundel.
+	 * @param range  maximum distance (in millimeters)
+	 */
 	public void setHoveringRange(int range) {
 		q.add(new ConfigureCommand("control:hovering_range", range));
 	}
 
+	/**
+	 * Set the maximum bending angle (euler angle).
+	 * @param angle  Maximum bending angle for the drone in radians, for both pitch and roll angles.
+	 *               This parameter is a positive floating-point value between 0 and 0.52 (ie. 30 deg).
+	 */
 	public void setMaxEulerAngle(float angle) {
 		setMaxEulerAngle(Location.CURRENT, angle);
 	}
 
+	/**
+	 * Set the maximum bending angle (euler angle).
+	 * @param l
+	 * @param angle  Maximum bending angle for the drone in radians, for both pitch and roll angles.
+	 *               This parameter is a positive floating-point value between 0 and 0.52 (ie. 30 deg).
+	 */
 	public void setMaxEulerAngle(Location l, float angle) {
+		angle = limit(angle, 0f, 0.52f);
+		System.out.println("CommandManager: setMaxEulerAngle (bendingAngle): " + angle + " rad");
 		String command = "control:" + l.getCommandPrefix() + "euler_angle_max";
 		q.add(new ConfigureCommand(command, String.valueOf(angle)));
 	}
 
+	/**
+	 * Set a maximum altitude for the drone.
+	 * @param altitude  Altitude in millimeters (max. 100000 = 100m)
+	 */
 	public void setMaxAltitude(int altitude) {
 		setMaxAltitude(Location.CURRENT, altitude);
 	}
 
+	/**
+	 * Set a maximum altitude for the drone.
+	 * @param l
+	 * @param altitude  Altitude in millimeters (max. 100000 = 100m)
+	 */
 	public void setMaxAltitude(Location l, int altitude) {
+		altitude = limit(altitude, 0, 100000);
+		System.out.println("CommandManager: setMaxAltitude: " + altitude + " mm");
 		String command = "control:" + l.getCommandPrefix() + "altitude_max";
 		q.add(new ConfigureCommand(command, altitude));
 	}
 
+	/**
+	 * Set a minimum altitude for the drone.
+	 * @param altitude  Altitude in millimeters
+	 */
 	public void setMinAltitude(int altitude) {
 		setMinAltitude(Location.CURRENT, altitude);
 	}
 
+	/**
+	 * Set a minimum altitude for the drone.
+	 * @param l
+	 * @param altitude  Altitude in millimeters
+	 */
 	public void setMinAltitude(Location l, int altitude) {
+		altitude = limit(altitude, 0, 100000);
 		String command = "control:" + l.getCommandPrefix() + "altitude_min";
 		q.add(new ConfigureCommand(command, altitude));
 	}
 
+	/**
+	 * Set the maximum vertical speed of the drone.
+	 * @param speed  Maximum vertical speed of the AR.Drone, in milimeters per second.
+	 *               Recommanded values goes from 200 to 2000. Others values may cause instability.
+	 */
 	public void setMaxVz(int speed) {
 		setMaxVz(Location.CURRENT, speed);
 	}
 
+	/**
+	 * Set the maximum vertical speed of the drone.
+	 * @param l
+	 * @param speed  Maximum vertical speed of the AR.Drone, in milimeters per second.
+	 *               Recommanded values goes from 200 to 2000. Others values may cause instability.
+	 */
 	public void setMaxVz(Location l, int speed) {
+		speed = limit(speed, 0, 2000);
+		System.out.println("CommandManager: setMaxVz (verticalSpeed): " + speed + " mm");
 		String command = "control:" + l.getCommandPrefix() + "control_vz_max";
 		q.add(new ConfigureCommand(command, speed));
 	}
 
-	public void setMaxYaw(int speed) {
+	/**
+	 * Set the maximum yaw speed of the AR.Drone, in radians per second.
+	 * @param speed  Maximum yaw speed of the AR.Drone, in radians per second.
+     *               Recommended values go from 40/s to 350/s (approx 0.7rad/s to 6.11rad/s). Others values may cause instability.
+	 */
+	public void setMaxYaw(float speed) {
 		setMaxYaw(Location.CURRENT, speed);
 	}
 
-	public void setMaxYaw(Location l, int speed) {
+	/**
+	 * Set the maximum yaw speed of the AR.Drone, in radians per second.
+	 * @param l
+	 * @param speed  Maximum yaw speed of the AR.Drone, in radians per second.
+     *               Recommended values go from 40/s to 350/s (approx 0.7rad/s to 6.11rad/s). Others values may cause instability.
+	 */
+	public void setMaxYaw(Location l, float speed) {
+		speed = limit(speed, 0.7f, 6.11f);
 		String command = "control:" + l.getCommandPrefix() + "control_yaw";
 		q.add(new ConfigureCommand(command, speed));
 	}
@@ -324,23 +456,31 @@ public class CommandManager extends AbstractManager {
 		q.add(command);
 	}
 
+	/**
+	 * This settings tells the control loop if the AR.Drone is flying outside with or without it outdoor hull.
+	 * @param flying_outdoor  TRUE, if flying outdoor. FALSE, if flying indoor
+	 * @param outdoor_hull  TRUE, if outdoor shell is used. FALSE, if indoor shell is used.
+	 */
 	public void setOutdoor(boolean flying_outdoor, boolean outdoor_hull) {
 		System.out.println("CommandManager: setOutdoor(flyingOutdoor,usingOutdoorHull) = " + flying_outdoor + "," + outdoor_hull);
 		q.add(new ConfigureCommand("control:outdoor", flying_outdoor));
 		q.add(new ConfigureCommand("control:flight_without_shell", outdoor_hull));
 	}
 
-	public void setAutonomousFlight(boolean b) {
-		q.add(new ConfigureCommand("control:autonomous_flight", b));
-	}
+//	@Deprecated
+//	public void setAutonomousFlight(boolean b) {
+//		q.add(new ConfigureCommand("control:autonomous_flight", b));
+//	}
 
-	public void setManualTrim(boolean b) {
-		q.add(new ConfigureCommand("control:manual_trim", b));
-	}
+//	Shoud not be used with commercial AR.Drones
+//	public void setManualTrim(boolean b) {
+//		q.add(new ConfigureCommand("control:manual_trim", b));
+//	}
 
-	public void setPhoneTilt(float tilt) {
-		q.add(new ConfigureCommand("control:control_iphone_tilt", String.valueOf(tilt)));
-	}
+//	Why should we offer this in Java ?
+//	public void setPhoneTilt(float tilt) {
+//		q.add(new ConfigureCommand("control:control_iphone_tilt", String.valueOf(tilt)));
+//	}
 
 	public void animate(FlightAnimation a) {
 		q.add(new FlightAnimationCommand(a));
@@ -352,22 +492,48 @@ public class CommandManager extends AbstractManager {
 		q.add(new ConfigureCommand("gps:altitude", altitude));
 	}
 
+	/**
+	 * Set the frequency of the ultrasound measures for altitude. Using two different frequencies can reduce significantly the
+	 * ultrasound perturbations between two AR.Drones.
+	 * @param f  Only two frequencies are availaible : 22:22 and 25 Hz.
+	 */
 	public void setUltrasoundFrequency(UltrasoundFrequency f) {
 		q.add(new ConfigureCommand("pic:ultrasound_freq", f.getValue()));
 	}
 
+	/**
+	 * The AR.Drone SSID. Changes are applied on reboot.
+	 * @param ssid  The new SSID, e.g. "myArdroneNetwork"
+	 */
 	public void setSSIDSinglePlayer(String ssid) {
 		q.add(new ConfigureCommand("network:ssid_single_player", ssid));
 	}
 
+	/**
+	 * The AR.Drone SSID for multi player. Currently unused.
+	 * @param ssid  The new SSID, e.g. "myArdroneNetwork"
+	 */
 	public void setSSIDMultiPlayer(String ssid) {
 		q.add(new ConfigureCommand("network:ssid_multi_player", ssid));
 	}
 
+	/**
+	 * Change the mode of the Wi-Fi network. 
+	 * Note : This value should not be changed for users applications.
+	 * Possible values are :
+	 * 0 : The drone is the access point of the network
+	 * 1 : The drone creates (or join) the network in Ad-Hoc mode
+	 * 2 : The drone tries to join the network as a station
+	 * @param mode
+	 */
 	public void setWifiMode(WifiMode mode) {
 		q.add(new ConfigureCommand("network:wifi_mode", mode.ordinal()));
 	}
 
+	/**
+	 * Set the MAC address paired with the AR.Drone. Set to "00:00:00:00:00:00" to unpair the AR.Drone.
+	 * @param mac  The new MAC address.
+	 */
 	public void setOwnerMac(String mac) {
 		q.add(new ConfigureCommand("network:owner_mac", mac));
 	}
@@ -518,7 +684,6 @@ public class CommandManager extends AbstractManager {
 	 */
 	@Override
 	public void run() {
-		System.out.println("Started " + getClass().getSimpleName());
 		connect(ARDroneUtils.PORT);
 		ATCommand c;
 		ATCommand cs = null;
@@ -581,6 +746,8 @@ public class CommandManager extends AbstractManager {
 		landing();
 		
 		setOutdoor(false, false);
+		setMaxAltitude(10000);
+		setMaxVz(1000);
 		setMaxEulerAngle(0.25f);
 	}
 

@@ -56,20 +56,15 @@ public class VideoManager extends AbstractTCPManager {
 			return;
 		connect(ARDroneUtils.VIDEO_PORT);
 		ticklePort(ARDroneUtils.VIDEO_PORT);
-		manager.setVideoData(true);
-		ticklePort(ARDroneUtils.VIDEO_PORT);
-		manager.setVideoBitrateControl(VideoBitRateMode.DISABLED);
+		
+		manager.setVideoBitrateControl(VideoBitRateMode.DISABLED); // bitrate set to maximum
+		
 		decoder.decode(getInputStream());
 		if (listener != null)
 			decoder.setImageListener(listener);
 		close();
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see de.yadrone.base.manager.AbstractTCPManager#close()
-	 */
 	@Override
 	public void close() {
 		if (decoder == null)

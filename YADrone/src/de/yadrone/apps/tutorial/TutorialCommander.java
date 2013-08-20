@@ -38,33 +38,34 @@ public class TutorialCommander
 		try
 		{
 			CommandManager cmd = drone.getCommandManager();
+			int speed = 30; // percent of max speed
 			
 			cmd.takeOff();
 			Thread.sleep(5000);
 			
-			cmd.goLeft(20);
+			cmd.goLeft(speed);
 			Thread.sleep(1000);
 			
 			cmd.hover();
-			Thread.sleep(1000);
+			Thread.sleep(2000);
 			
-			cmd.goRight(20);
-			Thread.sleep(1000);
-			
-			cmd.hover();
-			Thread.sleep(1000);
-			
-			cmd.forward(20);
+			cmd.goRight(speed);
 			Thread.sleep(1000);
 			
 			cmd.hover();
-			Thread.sleep(1000);
+			Thread.sleep(2000);
 			
-			cmd.backward(20);
+			cmd.forward(speed);
 			Thread.sleep(1000);
 			
 			cmd.hover();
+			Thread.sleep(2000);
+			
+			cmd.backward(speed);
 			Thread.sleep(1000);
+			
+			cmd.hover();
+			Thread.sleep(2000);
 			
 			cmd.landing();
 		}

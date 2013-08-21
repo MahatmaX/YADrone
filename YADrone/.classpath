@@ -12,5 +12,7 @@
 	<classpathentry kind="lib" path="lib/reflections/guava-11.0.2.jar"/>
 	<classpathentry kind="lib" path="lib/reflections/javassist-3.16.1-GA.jar"/>
 	<classpathentry kind="lib" path="lib/reflections/reflections-0.9.9-RC1.jar"/>
+	<classpathentry kind="lib" path="lib/zxing/core-2.2.jar"/>
+	<classpathentry kind="lib" path="lib/zxing/javase-2.2.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

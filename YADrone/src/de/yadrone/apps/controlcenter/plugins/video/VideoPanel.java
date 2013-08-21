@@ -12,9 +12,17 @@ import java.awt.image.BufferedImage;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 
+import com.google.zxing.BinaryBitmap;
+import com.google.zxing.LuminanceSource;
+import com.google.zxing.MultiFormatReader;
+import com.google.zxing.ReaderException;
+import com.google.zxing.Result;
+import com.google.zxing.ResultMetadataType;
+import com.google.zxing.ResultPoint;
+import com.google.zxing.client.j2se.BufferedImageLuminanceSource;
+import com.google.zxing.common.HybridBinarizer;
 
 import de.yadrone.apps.controlcenter.ICCPlugin;
-import de.yadrone.base.ARDrone;
 import de.yadrone.base.IARDrone;
 import de.yadrone.base.video.ImageListener;
 
@@ -75,12 +83,12 @@ public class VideoPanel extends JPanel implements ICCPlugin
 	public void activate(IARDrone drone)
 	{
 		this.drone = drone;
-		drone.getVideoManager().setImageListener(imageListener);
+		drone.getVideoManager().addImageListener(imageListener);
 	}
 
 	public void deactivate()
 	{
-		drone.getVideoManager().setImageListener(null);
+		drone.getVideoManager().removeImageListener(imageListener);
 	}
 
 	public String getTitle()

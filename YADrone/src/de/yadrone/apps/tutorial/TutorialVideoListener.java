@@ -26,7 +26,7 @@ public class TutorialVideoListener extends JFrame
         setSize(640,360);
         setVisible(true);
         
-        drone.getVideoManager().setImageListener(new ImageListener() {
+        drone.getVideoManager().addImageListener(new ImageListener() {
             public void imageUpdated(BufferedImage newImage)
             {
             	image = newImage;

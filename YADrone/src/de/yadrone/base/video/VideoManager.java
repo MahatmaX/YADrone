@@ -17,7 +17,9 @@ SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PRO
  */
 package de.yadrone.base.video;
 
+import java.awt.image.BufferedImage;
 import java.net.InetAddress;
+import java.util.ArrayList;
 
 
 import de.yadrone.base.command.CommandManager;
@@ -25,12 +27,12 @@ import de.yadrone.base.command.VideoBitRateMode;
 import de.yadrone.base.manager.AbstractTCPManager;
 import de.yadrone.base.utils.ARDroneUtils;
 
-public class VideoManager extends AbstractTCPManager {
+public class VideoManager extends AbstractTCPManager implements ImageListener {
 	private VideoDecoder decoder;
 
 	private CommandManager manager = null;
 
-	private ImageListener listener = null;
+	private ArrayList<ImageListener> listener = new ArrayList<ImageListener>();
 
 	public VideoManager(InetAddress inetaddr, CommandManager manager, VideoDecoder decoder) {
 		super(inetaddr);
@@ -38,11 +40,27 @@ public class VideoManager extends AbstractTCPManager {
 		this.decoder = decoder;
 	}
 
-	public void setImageListener(ImageListener listener) {
-		this.listener = listener;
-		decoder.setImageListener(listener);
+	public void addImageListener(ImageListener listener) {
+		this.listener.add(listener);
+		if (this.listener.size() == 1)
+			decoder.setImageListener(this);
+	}
+	
+	public void removeImageListener(ImageListener listener) {
+		this.listener.remove(listener);
+		if (this.listener.size() == 0)
+			decoder.setImageListener(null);
 	}
 
+	/** Called only by decoder to inform all the other listener */
+	public void imageUpdated(BufferedImage image)
+	{
+		for (int i=0; i < listener.size(); i++)
+		{
+			listener.get(i).imageUpdated(image);
+		}
+	}
+	
 	public boolean connect(int port) {
 		if (decoder == null)
 			return false;
@@ -60,8 +78,7 @@ public class VideoManager extends AbstractTCPManager {
 		manager.setVideoBitrateControl(VideoBitRateMode.DISABLED); // bitrate set to maximum
 		
 		decoder.decode(getInputStream());
-		if (listener != null)
-			decoder.setImageListener(listener);
+		
 		close();
 	}
 

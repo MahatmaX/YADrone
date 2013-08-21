@@ -102,7 +102,7 @@ public class XugglerDecoder implements VideoDecoder
 						 */
 						int bytesDecoded = videoCoder.decodeVideo(picture, packet, offset);
 						if (bytesDecoded < 0)
-							throw new RuntimeException("got an error decoding video");
+							throw new RuntimeException("got an error decoding single video frame");
 						offset += bytesDecoded;
 	
 						/*
@@ -189,9 +189,9 @@ public class XugglerDecoder implements VideoDecoder
 				}
 				catch(Exception exc)
 				{
-					// hopefully nothing really bad
-					System.err.println("XugglerDecoder: Exception while decoding video: " + exc.getMessage());
-					exc.printStackTrace();
+					// hopefully nothing really bad (probably failed to decode single video frame)
+//					System.err.println("XugglerDecoder: Exception while decoding video: " + exc.getMessage());
+//					exc.printStackTrace();
 				}
 			}
 			else
@@ -205,7 +205,7 @@ public class XugglerDecoder implements VideoDecoder
 			}
 
 		}
-		System.out.println("XugglerDecoder: clean up ...");
+		System.out.println("XugglerDecoder: clean up and close stream ...");
 		/*
 		 * Technically since we're exiting anyway, these will be cleaned up by
 		 * the garbage collector... but because we're nice people and want to be

@@ -162,7 +162,7 @@ public class PaperChaseController extends Thread implements TagListener
 		else if ((tagOrientation < 350) && (tagOrientation > 180))
 		{
 			System.out.println("Spin right");
-			drone.getCommandManager().spinRight(SPEED);
+//			drone.getCommandManager().spinRight(SPEED);
 			Thread.currentThread().sleep(100);
 		}
 		else

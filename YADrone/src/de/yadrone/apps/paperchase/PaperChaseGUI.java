@@ -3,6 +3,9 @@ package de.yadrone.apps.paperchase;
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.Graphics;
+import java.awt.KeyEventDispatcher;
+import java.awt.KeyboardFocusManager;
+import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
@@ -14,12 +17,15 @@ import javax.swing.SwingUtilities;
 import com.google.zxing.Result;
 import com.google.zxing.ResultPoint;
 
+import de.yadrone.apps.controlcenter.plugins.keyboard.KeyboardCommandManager;
 import de.yadrone.base.IARDrone;
 import de.yadrone.base.video.ImageListener;
 
 public class PaperChaseGUI extends JFrame implements ImageListener, TagListener
 {
 	private Font font = new Font("SansSerif", Font.BOLD, 14);
+	
+	private IARDrone drone;
 	
 	private BufferedImage image = null;
 	private Result result;
@@ -32,6 +38,8 @@ public class PaperChaseGUI extends JFrame implements ImageListener, TagListener
 	{
 		super("YADrone Paper Chase");
         
+		this.drone = drone;
+		
         setSize(PaperChase.IMAGE_WIDTH, PaperChase.IMAGE_HEIGHT);
         setVisible(true);
         
@@ -94,8 +102,13 @@ public class PaperChaseGUI extends JFrame implements ImageListener, TagListener
         setContentPane(contentPane);
 	}
 	
+	private long imageCount = 0;
+	
 	public void imageUpdated(BufferedImage newImage)
     {
+		if ((++imageCount % 2) == 0)
+			return;
+		
     	image = newImage;
 		SwingUtilities.invokeLater(new Runnable() {
 			public void run()

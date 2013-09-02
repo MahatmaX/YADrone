@@ -131,7 +131,7 @@ public class CommandManager extends AbstractManager {
 		fbtilt = limit(fbtilt, -1f, 1f);
 		vspeed = limit(vspeed, -1f, 1f);
 		aspeed = limit(aspeed, -1f, 1f);
-		System.out.println("Move lrTilt=" + lrtilt + " fbtilt=" + fbtilt + " vspeed=" + vspeed + " aspeed=" + aspeed);
+//		System.out.println("CommandManager: Move lrTilt=" + lrtilt + " fbtilt=" + fbtilt + " vspeed=" + vspeed + " aspeed=" + aspeed);
 		q.add(new MoveCommand(false, lrtilt, fbtilt, vspeed, aspeed));
 	}
 
@@ -753,7 +753,7 @@ public class CommandManager extends AbstractManager {
 
 	private synchronized void sendCommand(ATCommand c) throws InterruptedException, IOException {
 		if (!(c instanceof KeepAliveCommand)) {
-			System.out.println("Send Command: " + c.getCommandString(seq));
+			// System.out.println("CommandManager: send " + c.getCommandString(seq));
 		}
 		byte[] buffer = c.getPacket(seq++);
 		DatagramPacket packet = new DatagramPacket(buffer, buffer.length, inetaddr, ARDroneUtils.PORT);

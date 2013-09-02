@@ -18,14 +18,14 @@ public class KeyboardCommandManager implements KeyListener
 	
 	public void keyReleased(KeyEvent e)
 	{
-		System.out.println("Key released: " + e.getKeyChar());
+//		System.out.println("Key released: " + e.getKeyChar());
 
 		drone.hover();
 	}
 
 	public void keyPressed(KeyEvent e)
 	{
-		System.out.println("Key pressed: " + e.getKeyChar()); //  + " (Enter=" + KeyEvent.VK_ENTER + " Space=" + KeyEvent.VK_SPACE + " S=" + KeyEvent.VK_S + " E=" + KeyEvent.VK_E + ")");
+//		System.out.println("Key pressed: " + e.getKeyChar()); //  + " (Enter=" + KeyEvent.VK_ENTER + " Space=" + KeyEvent.VK_SPACE + " S=" + KeyEvent.VK_S + " E=" + KeyEvent.VK_E + ")");
 
 		int key = e.getKeyCode();
 		int mod = e.getModifiersEx();

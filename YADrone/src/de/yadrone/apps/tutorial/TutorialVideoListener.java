@@ -13,6 +13,7 @@ import javax.swing.SwingUtilities;
 
 
 import de.yadrone.base.IARDrone;
+import de.yadrone.base.command.VideoChannel;
 import de.yadrone.base.video.ImageListener;
 
 public class TutorialVideoListener extends JFrame
@@ -42,12 +43,14 @@ public class TutorialVideoListener extends JFrame
         addMouseListener(new MouseAdapter() {
             public void mouseClicked(MouseEvent e)
             {
-                drone.toggleCamera();
+            	drone.getCommandManager().setVideoChannel(VideoChannel.NEXT);
             }
         });
-        
+
+        // close the 
         addWindowListener(new WindowAdapter() {
-			public void windowClosing(WindowEvent e) {
+			public void windowClosing(WindowEvent e) 
+			{
 				drone.stop();
 				System.exit(0);
 			}
@@ -56,7 +59,6 @@ public class TutorialVideoListener extends JFrame
     
     public synchronized void paint(Graphics g)
     {
-//        super.paint(g);
         if (image != null)
 			g.drawImage(image, 0, 0, image.getWidth(), image.getHeight(), null);
     }

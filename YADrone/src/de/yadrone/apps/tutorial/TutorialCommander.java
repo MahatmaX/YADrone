@@ -38,7 +38,7 @@ public class TutorialCommander
 		try
 		{
 			CommandManager cmd = drone.getCommandManager();
-			int speed = 30; // percent of max speed
+			int speed = 30; // percentage of max speed
 			
 			cmd.takeOff();
 			Thread.sleep(5000);

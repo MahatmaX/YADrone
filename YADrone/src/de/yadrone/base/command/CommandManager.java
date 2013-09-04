@@ -17,23 +17,13 @@ SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PRO
  */
 package de.yadrone.base.command;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
-import java.net.MalformedURLException;
-import java.net.SocketException;
-import java.net.URL;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
-
-import org.apache.commons.net.ftp.FTPClient;
-import org.apache.commons.net.ftp.FTPFile;
-import org.apache.commons.net.ftp.FTPFileFilter;
-import org.apache.commons.net.ftp.FTPReply;
 
 import de.yadrone.base.manager.AbstractManager;
 import de.yadrone.base.navdata.CadType;
@@ -559,50 +549,50 @@ public class CommandManager extends AbstractManager {
 				+ String.valueOf(delay) + "," + String.valueOf(nshots) + "," + label));
 	}
 
-	public URL[] getRecordedNavDataURLs() throws IOException {
-		URLRetriever r = new URLRetriever(inetaddr, "anonymous", "");
-		return r.getURLs(new NavDataFileFilter());
-	}
-
-	private static class URLRetriever {
-		private String user;
-		private String pass;
-		private InetAddress address;
-
-		public URLRetriever(InetAddress address, String user, String pass) {
-			this.address = address;
-			this.user = user;
-			this.pass = pass;
-		}
-
-		public String getUserBoxDir() {
-			return "/boxes/";
-		}
-
-		public URL[] getURLs(FTPFileFilter filter) throws IOException {
-			FTPClient ftp = login();
-
-			ArrayList<URL> urls = new ArrayList<URL>();
-			FTPFile[] dirs = ftp.listFiles("", new UserboxFileFilter());
-			for (FTPFile dir : dirs) {
-				FTPFile[] files = ftp.listFiles(getUserBoxDir() + dir.getName(), filter);
-				for (FTPFile file : files) {
-					try {
-						URL url = new URL("ftp://" + user + ":" + pass + "@" + address.getHostName() + getUserBoxDir()
-								+ dir.getName() + File.separator + file.getName());
-						System.out.println("PICTURE: " + url);
-						urls.add(url);
-					} catch (MalformedURLException e) {
-						e.printStackTrace();
-					}
-				}
-			}
-
-			logout(ftp);
-
-			return urls.toArray(new URL[urls.size()]);
-		}
-
+//	public URL[] getRecordedNavDataURLs() throws IOException {
+//		URLRetriever r = new URLRetriever(inetaddr, "anonymous", "");
+//		return r.getURLs(new NavDataFileFilter());
+//	}
+//
+//	private static class URLRetriever {
+//		private String user;
+//		private String pass;
+//		private InetAddress address;
+//
+//		public URLRetriever(InetAddress address, String user, String pass) {
+//			this.address = address;
+//			this.user = user;
+//			this.pass = pass;
+//		}
+//
+//		public String getUserBoxDir() {
+//			return "/boxes/";
+//		}
+//
+//		public URL[] getURLs(FTPFileFilter filter) throws IOException {
+//			FTPClient ftp = login();
+//
+//			ArrayList<URL> urls = new ArrayList<URL>();
+//			FTPFile[] dirs = ftp.listFiles("", new UserboxFileFilter());
+//			for (FTPFile dir : dirs) {
+//				FTPFile[] files = ftp.listFiles(getUserBoxDir() + dir.getName(), filter);
+//				for (FTPFile file : files) {
+//					try {
+//						URL url = new URL("ftp://" + user + ":" + pass + "@" + address.getHostName() + getUserBoxDir()
+//								+ dir.getName() + File.separator + file.getName());
+//						System.out.println("PICTURE: " + url);
+//						urls.add(url);
+//					} catch (MalformedURLException e) {
+//						e.printStackTrace();
+//					}
+//				}
+//			}
+//
+//			logout(ftp);
+//
+//			return urls.toArray(new URL[urls.size()]);
+//		}
+//
 //		public Bitmap[] getBitmaps() throws IOException {
 //			FTPClient ftp = login();
 //
@@ -628,38 +618,38 @@ public class CommandManager extends AbstractManager {
 //
 //			return bmps.toArray(new Bitmap[bmps.size()]);
 //		}
-
-		private FTPClient login() throws SocketException, IOException {
-			FTPClient ftp = new FTPClient();
-			ftp.connect(address);
-
-			int reply = ftp.getReplyCode();
-			if (!FTPReply.isPositiveCompletion(reply)) {
-				ftp.disconnect();
-				throw new IOException("FTP server refused connection.");
-			}
-
-			ftp.enterLocalPassiveMode();
-			ftp.login(user, pass);
-
-			return ftp;
-		}
-
-		private void logout(FTPClient ftp) throws IOException {
-			ftp.logout();
-		}
-
-	}
-
+//
+//		private FTPClient login() throws SocketException, IOException {
+//			FTPClient ftp = new FTPClient();
+//			ftp.connect(address);
+//
+//			int reply = ftp.getReplyCode();
+//			if (!FTPReply.isPositiveCompletion(reply)) {
+//				ftp.disconnect();
+//				throw new IOException("FTP server refused connection.");
+//			}
+//
+//			ftp.enterLocalPassiveMode();
+//			ftp.login(user, pass);
+//
+//			return ftp;
+//		}
+//
+//		private void logout(FTPClient ftp) throws IOException {
+//			ftp.logout();
+//		}
+//
+//	}
+//
 //	public Bitmap[] getRecordedPictures() throws IOException {
 //		URLRetriever r = new URLRetriever(inetaddr, "anonymous", "");
 //		return r.getBitmaps();
 //	}
-
-	public URL[] getRecordedPictureURLs() throws IOException {
-		URLRetriever r = new URLRetriever(inetaddr, "anonymous", "");
-		return r.getURLs(new JPEGFileFilter());
-	}
+//
+//	public URL[] getRecordedPictureURLs() throws IOException {
+//		URLRetriever r = new URLRetriever(inetaddr, "anonymous", "");
+//		return r.getURLs(new JPEGFileFilter());
+//	}
 
 	// AT*MISC undocumented, but needed to initialize
 	// see https://github.com/bklang/ARbDrone/wiki/UndocumentedCommands

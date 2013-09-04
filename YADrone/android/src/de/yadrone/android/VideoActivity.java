@@ -8,8 +8,7 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.widget.VideoView;
-
-import com.shigeodayo.ardrone.ARDrone;
+import de.yadrone.base.IARDrone;
 import de.yadrone.base.command.CommandManager;
 
 public class VideoActivity extends Activity {
@@ -19,7 +18,7 @@ public class VideoActivity extends Activity {
         setContentView(R.layout.activity_video);
 
         YADroneApplication app = (YADroneApplication) getApplication();
-        final ARDrone drone = app.getARDrone();
+        final IARDrone drone = app.getARDrone();
         final CommandManager cmdManager = drone.getCommandManager();
         
         Thread t = new Thread(new Runnable() {

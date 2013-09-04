@@ -48,10 +48,11 @@ public class StreamProxy implements Runnable
 			e.printStackTrace();
 		}
 		
-		ticklePort(ARDroneUtils.VIDEO_PORT);
-		manager.enableVideoData();
-		ticklePort(ARDroneUtils.VIDEO_PORT);
-		manager.disableAutomaticVideoBitrate();
+		// toDo: API changed with version 0.3, see VideoTutorial on Homepage
+//		ticklePort(ARDroneUtils.VIDEO_PORT);
+//		manager.enableVideoData();
+//		ticklePort(ARDroneUtils.VIDEO_PORT);
+//		manager.disableAutomaticVideoBitrate();
 		
 		// Create server socket
 		try

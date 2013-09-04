@@ -12,8 +12,7 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.widget.TextView;
-
-import com.shigeodayo.ardrone.ARDrone;
+import de.yadrone.base.IARDrone;
 
 public class MainActivity extends Activity {
 
@@ -26,7 +25,6 @@ public class MainActivity extends Activity {
 		text.append("\nConnected to " + wifi.getConnectionInfo().getSSID());
 		
 		initialize();
-		
     }
     
     private void initialize()
@@ -34,28 +32,19 @@ public class MainActivity extends Activity {
     	final TextView text = (TextView)findViewById(R.id.text_init);
     	
     	YADroneApplication app = (YADroneApplication)getApplication();
-    	ARDrone drone = app.getARDrone();
+    	IARDrone drone = app.getARDrone();
     	
 		try
 		{
-			text.append("\n\nConnect Drone Controller\n");
-			drone.connect();
-			text.append("Connect Drone Navdata Socket\n");
-			drone.connectNav();
-//			text.append("Connect Drone Video Socket\n");
-//			ardrone.connectVideo();
-			text.append("Start Drone\n");
+			text.append("\n\nInitialize the drone ...\n");
 			drone.start();
-			
-			text.append("Set max. Altitude to 5m (15ft)\n\n");
-			drone.setMaxAltitude(5000); // max 5 meters
 		}
 		catch(Exception exc)
 		{
 			exc.printStackTrace();
 			
 			if (drone != null)
-				drone.disconnect();
+				drone.stop();
 		}
 	}
 
@@ -70,8 +59,8 @@ public class MainActivity extends Activity {
 				public void onClick(DialogInterface dialog, int whichButton)
 				{
 					YADroneApplication app = (YADroneApplication)getApplication();
-			    	ARDrone drone = app.getARDrone();
-			    	drone.disconnect();
+			    	IARDrone drone = app.getARDrone();
+			    	drone.stop();
 			    	
 					finish();
 				}

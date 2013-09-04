@@ -12,8 +12,7 @@ import android.view.View.OnClickListener;
 import android.view.View.OnTouchListener;
 import android.widget.Button;
 import android.widget.Toast;
-
-import com.shigeodayo.ardrone.ARDrone;
+import de.yadrone.base.IARDrone;
 
 public class ControlActivity extends Activity {
 
@@ -29,14 +28,14 @@ public class ControlActivity extends Activity {
     private void initButtons()
 	{
     	YADroneApplication app = (YADroneApplication)getApplication();
-    	final ARDrone drone = app.getARDrone();
+    	final IARDrone drone = app.getARDrone();
 
     	Button forward = (Button)findViewById(R.id.cmd_forward);
     	forward.setOnTouchListener(new OnTouchListener() {
 			public boolean onTouch(View v, MotionEvent event)
 			{
 				if(event.getAction() == MotionEvent.ACTION_DOWN) 
-					drone.forward(20);
+					drone.getCommandManager().forward(20);
 				else if (event.getAction() == MotionEvent.ACTION_UP)
 	                drone.stop();
 
@@ -49,7 +48,7 @@ public class ControlActivity extends Activity {
 			public boolean onTouch(View v, MotionEvent event)
 			{
 				if(event.getAction() == MotionEvent.ACTION_DOWN) 
-					drone.backward(20);
+					drone.getCommandManager().backward(20);
 				else if (event.getAction() == MotionEvent.ACTION_UP)
 	                drone.stop();
 
@@ -63,7 +62,7 @@ public class ControlActivity extends Activity {
 			public boolean onTouch(View v, MotionEvent event)
 			{
 				if(event.getAction() == MotionEvent.ACTION_DOWN) 
-					drone.goLeft(20);
+					drone.getCommandManager().goLeft(20);
 				else if (event.getAction() == MotionEvent.ACTION_UP)
 	                drone.stop();
 
@@ -77,7 +76,7 @@ public class ControlActivity extends Activity {
 			public boolean onTouch(View v, MotionEvent event)
 			{
 				if(event.getAction() == MotionEvent.ACTION_DOWN) 
-					drone.goRight(20);
+					drone.getCommandManager().goRight(20);
 				else if (event.getAction() == MotionEvent.ACTION_UP)
 	                drone.stop();
 
@@ -90,7 +89,7 @@ public class ControlActivity extends Activity {
 			public boolean onTouch(View v, MotionEvent event)
 			{
 				if(event.getAction() == MotionEvent.ACTION_DOWN) 
-					drone.up(40);
+					drone.getCommandManager().up(40);
 				else if (event.getAction() == MotionEvent.ACTION_UP)
 	                drone.stop();
 
@@ -103,7 +102,7 @@ public class ControlActivity extends Activity {
 			public boolean onTouch(View v, MotionEvent event)
 			{
 				if(event.getAction() == MotionEvent.ACTION_DOWN) 
-					drone.down(40);
+					drone.getCommandManager().down(40);
 				else if (event.getAction() == MotionEvent.ACTION_UP)
 	                drone.stop();
 
@@ -117,7 +116,7 @@ public class ControlActivity extends Activity {
 			public boolean onTouch(View v, MotionEvent event)
 			{
 				if(event.getAction() == MotionEvent.ACTION_DOWN) 
-					drone.spinLeft(20);
+					drone.getCommandManager().spinLeft(20);
 				else if (event.getAction() == MotionEvent.ACTION_UP)
 	                drone.stop();
 
@@ -131,7 +130,7 @@ public class ControlActivity extends Activity {
 			public boolean onTouch(View v, MotionEvent event)
 			{
 				if(event.getAction() == MotionEvent.ACTION_DOWN) 
-					drone.spinRight(20);
+					drone.getCommandManager().spinRight(20);
 				else if (event.getAction() == MotionEvent.ACTION_UP)
 	                drone.stop();
 
@@ -139,11 +138,22 @@ public class ControlActivity extends Activity {
 			}
 		});
     	 
-    	Button landing = (Button)findViewById(R.id.cmd_landing);
+    	final Button landing = (Button)findViewById(R.id.cmd_landing);
     	landing.setOnClickListener(new OnClickListener() {
+    		boolean isFlying = false;
 			public void onClick(View v)
 			{
-				drone.landing();
+				if (!isFlying)
+				{
+					drone.takeOff();
+					landing.setText("Landing");
+				}
+				else
+				{
+					drone.landing();
+					landing.setText("Take Off");
+				}
+				isFlying = !isFlying;
 			}
 		});
     	

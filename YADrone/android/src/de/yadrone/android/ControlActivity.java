@@ -37,7 +37,7 @@ public class ControlActivity extends Activity {
 				if(event.getAction() == MotionEvent.ACTION_DOWN) 
 					drone.getCommandManager().forward(20);
 				else if (event.getAction() == MotionEvent.ACTION_UP)
-	                drone.stop();
+	                drone.hover();
 
 				return true;
 			}
@@ -50,7 +50,7 @@ public class ControlActivity extends Activity {
 				if(event.getAction() == MotionEvent.ACTION_DOWN) 
 					drone.getCommandManager().backward(20);
 				else if (event.getAction() == MotionEvent.ACTION_UP)
-	                drone.stop();
+	                drone.hover();
 
 				return true;
 			}
@@ -64,7 +64,7 @@ public class ControlActivity extends Activity {
 				if(event.getAction() == MotionEvent.ACTION_DOWN) 
 					drone.getCommandManager().goLeft(20);
 				else if (event.getAction() == MotionEvent.ACTION_UP)
-	                drone.stop();
+	                drone.hover();
 
 				return true;
 			}
@@ -78,7 +78,7 @@ public class ControlActivity extends Activity {
 				if(event.getAction() == MotionEvent.ACTION_DOWN) 
 					drone.getCommandManager().goRight(20);
 				else if (event.getAction() == MotionEvent.ACTION_UP)
-	                drone.stop();
+	                drone.hover();
 
 				return true;
 			}
@@ -91,7 +91,7 @@ public class ControlActivity extends Activity {
 				if(event.getAction() == MotionEvent.ACTION_DOWN) 
 					drone.getCommandManager().up(40);
 				else if (event.getAction() == MotionEvent.ACTION_UP)
-	                drone.stop();
+	                drone.hover();
 
 				return true;
 			}
@@ -104,7 +104,7 @@ public class ControlActivity extends Activity {
 				if(event.getAction() == MotionEvent.ACTION_DOWN) 
 					drone.getCommandManager().down(40);
 				else if (event.getAction() == MotionEvent.ACTION_UP)
-	                drone.stop();
+	                drone.hover();
 
 				return true;
 			}
@@ -118,7 +118,7 @@ public class ControlActivity extends Activity {
 				if(event.getAction() == MotionEvent.ACTION_DOWN) 
 					drone.getCommandManager().spinLeft(20);
 				else if (event.getAction() == MotionEvent.ACTION_UP)
-	                drone.stop();
+	                drone.hover();
 
 				return true;
 			}
@@ -132,7 +132,7 @@ public class ControlActivity extends Activity {
 				if(event.getAction() == MotionEvent.ACTION_DOWN) 
 					drone.getCommandManager().spinRight(20);
 				else if (event.getAction() == MotionEvent.ACTION_UP)
-	                drone.stop();
+	                drone.hover();
 
 				return true;
 			}
@@ -188,11 +188,11 @@ public class ControlActivity extends Activity {
 	    		i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
 	    		startActivity(i);
 		        return true;
-	    	case R.id.menuitem_video:
-	    		i = new Intent(this, VideoActivity.class);
-	    		i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-	    		startActivity(i);
-		        return true;
+//	    	case R.id.menuitem_video:
+//	    		i = new Intent(this, VideoActivity.class);
+//	    		i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+//	    		startActivity(i);
+//		        return true;
 		    default:
 		        return super.onOptionsItemSelected(item);
 	    }

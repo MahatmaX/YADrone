@@ -7,7 +7,7 @@
     <item android:id="@+id/menuitem_control"
           android:title="Control" />
     
-    <item android:id="@+id/menuitem_video"
-          android:title="Video" />
+    <!-- <item android:id="@+id/menuitem_video"
+          android:title="Video" />-->
     
 </menu>

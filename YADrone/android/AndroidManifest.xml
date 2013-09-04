@@ -38,7 +38,7 @@
             android:label="@string/title_activity_yadrone" />
         
         <activity
-            android:name=".VideoActivity"
+            android:name="de.yadrone.android.videodeprecated.VideoActivity"
             android:label="@string/title_activity_yadrone" />
     </application>
 

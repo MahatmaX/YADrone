@@ -1,4 +1,4 @@
-package de.yadrone.android;
+package de.yadrone.android.videodeprecated;
 
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
@@ -18,6 +18,12 @@ import android.util.Log;
 import de.yadrone.base.command.CommandManager;
 import de.yadrone.base.utils.ARDroneUtils;
 
+/**
+ * Note !!!
+ * This class was part of an experiment to display the video stream on Android.
+ * It has been used to as a proxy, which cut the proprietary PaVE header out of the video stream. 
+ * It did not work :-(
+ */
 public class StreamProxy implements Runnable
 {
 

@@ -72,11 +72,11 @@ public class NavDataActivity extends Activity implements AttitudeListener {
 	    		i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
 	    		startActivity(i);
 		        return true;
-	    	case R.id.menuitem_video:
-	    		i = new Intent(this, VideoActivity.class);
-	    		i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-	    		startActivity(i);
-		        return true;
+//	    	case R.id.menuitem_video:
+//	    		i = new Intent(this, VideoActivity.class);
+//	    		i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+//	    		startActivity(i);
+//		        return true;
 		    default:
 		        return super.onOptionsItemSelected(item);
 	    }

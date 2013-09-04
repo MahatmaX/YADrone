@@ -1,4 +1,4 @@
-package de.yadrone.android;
+package de.yadrone.android.videodeprecated;
 
 import android.app.Activity;
 import android.content.Intent;
@@ -8,6 +8,14 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.widget.VideoView;
+import de.yadrone.android.ControlActivity;
+import de.yadrone.android.MainActivity;
+import de.yadrone.android.NavDataActivity;
+import de.yadrone.android.R;
+import de.yadrone.android.YADroneApplication;
+import de.yadrone.android.R.id;
+import de.yadrone.android.R.layout;
+import de.yadrone.android.R.menu;
 import de.yadrone.base.IARDrone;
 import de.yadrone.base.command.CommandManager;
 

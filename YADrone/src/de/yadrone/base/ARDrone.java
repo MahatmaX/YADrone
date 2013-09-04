@@ -63,9 +63,9 @@ public class ARDrone implements IARDrone {
 	}
 	
 	/**
-	 * constructor
-	 * 
-	 * @param ipaddr
+	 * Create a new instance of a drone's virtual counterpart.
+	 * @param ipaddr  The address of the drone, e.g. 192.168.1.1
+	 * @param videoDecoder  A decoder instance, e.g. 'new XugglerDecoder' or null, if video shall not be used (e.g. on Android devices)
 	 */
 	public ARDrone(String ipaddr, VideoDecoder videoDecoder) {
 		this.ipaddr = ipaddr;
@@ -91,6 +91,11 @@ public class ARDrone implements IARDrone {
 	}
 
 	public synchronized VideoManager getVideoManager() {
+		// videoDecoder may only be null if the corresponding constructor of this class has been called with null
+		// this can should be done when working e.g. with Android devices
+		if (videoDecoder == null)
+			return null;
+		
 		if (videoManager == null) {
 			InetAddress ia = getInetAddress();
 			CommandManager cm = getCommandManager();
@@ -119,7 +124,8 @@ public class ARDrone implements IARDrone {
 		NavDataManager nm = getNavDataManager();
 		nm.stop();
 		VideoManager vm = getVideoManager();
-		vm.close();
+		if (vm != null)
+			vm.close();
 	}
 
 	@Override
@@ -131,7 +137,8 @@ public class ARDrone implements IARDrone {
 		NavDataManager nm = getNavDataManager();
 		nm.start();
 		VideoManager vm = getVideoManager();
-		vm.start();
+		if (vm != null)
+			vm.start();
 	}
 
 	@Override

@@ -43,7 +43,7 @@ public class QRCodeScanner implements ImageListener
 			ResultPoint a = points[1]; // top-left
 			ResultPoint b = points[2]; // top-right
 			
-			// Find the degree of the rotation that is needed
+			// Find the degree of the rotation (needed e.g. for auto control)
 
 			double z = Math.abs(a.getX() - b.getX());
 			double x = Math.abs(a.getY() - b.getY());

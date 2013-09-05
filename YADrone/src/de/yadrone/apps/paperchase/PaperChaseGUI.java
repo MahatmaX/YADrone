@@ -84,11 +84,16 @@ public class PaperChaseGUI extends JFrame implements ImageListener, TagListener
 			public void stateChanged(DroneState state)
 			{
 				if (state.isFlying())
+				{
 					startGameTimeCounter();
+					drone.getNavDataManager().removeStateListener(this);
+				}
 			}
 			
 			public void controlStateChanged(ControlState state) { }
 		});
+        
+        pack();
 	}
 	
 	private void createMenuBar()
@@ -266,7 +271,10 @@ public class PaperChaseGUI extends JFrame implements ImageListener, TagListener
 			for (int i=0; i < shredsToFind.length; i++)
 			{
 				if (shredsToFind[i].equals(result.getText()))
+				{
+					shredsToFind[i] = shredsToFind[i] + " - " + gameTime;
 					shredsFound[i] = true;
+				}
 			}
 			
 			// now check if all shreds have been found and if so, set the gameOver flag
@@ -287,6 +295,8 @@ public class PaperChaseGUI extends JFrame implements ImageListener, TagListener
 	
 	private void startGameTimeCounter()
 	{
+		gameStartTimestamp = System.currentTimeMillis();
+		
 		TimerTask timerTask = new TimerTask() {
 
 			public void run()

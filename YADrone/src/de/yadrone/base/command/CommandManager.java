@@ -23,6 +23,8 @@ import java.net.InetAddress;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
 
 import de.yadrone.base.manager.AbstractManager;
@@ -32,12 +34,14 @@ import de.yadrone.base.utils.ARDroneUtils;
 public class CommandManager extends AbstractManager {
 
 	private CommandQueue q;
+	private Timer timer;
 
 	private static int seq = 1;
 
 	public CommandManager(InetAddress inetaddr) {
 		super(inetaddr);
 		this.q = new CommandQueue(100);
+		this.timer = new Timer("YADrone CommandManager Timer");
 		initARDrone();
 	}
 
@@ -49,63 +53,122 @@ public class CommandManager extends AbstractManager {
 		q.add(new VideoChannelCommand(c));
 	}
 
-	public void landing() {
+	/**
+	 * Wait (sleep) for specified amount of time (same semantics as after() and waitFor() - blocks the calling thread).
+	 * This way commands can be executed for a certain amount of time, e.g. fly forward for 2000 ms, then turn right.
+	 * @param millis  Number of milliseconds to wait
+	 */
+	public CommandManager doFor(long millis)
+	{
+		return waitFor(millis);
+	}
+	
+	/**
+	 * Wait (sleep) for specified amount of time (same semantics as doFor() and waitFor() - blocks the calling thread).
+	 * This way commands can be executed for a certain amount of time, e.g. fly forward for 2000 ms, then turn right.
+	 * @param millis  Number of milliseconds to wait
+	 */
+	public CommandManager after(long millis)
+	{
+		return waitFor(millis);
+	}
+	
+	/**
+	 * Wait (sleep) for specified amount of time (same semantics as doFor() and after() - blocks the calling thread)
+	 * This way commands can be executed for a certain amount of time, e.g. fly forward for 2000 ms, then turn right.
+	 * @param millis  Number of milliseconds to wait
+	 */
+	public CommandManager waitFor(long millis)
+	{
+		try
+		{
+			Thread.sleep(millis);
+		}
+		catch (InterruptedException e)
+		{
+			e.printStackTrace();
+		}
+		
+		return this;
+	}
+	
+	/**
+	 * Schedule a command set (or arbitrary runnable object) to be executed after a certain amount of time, e.g. fly forward for 2000 ms, then turn right.
+	 * In contrast to after(), waitFor() and doFor() this method executes asynchronously, i.e. returns immediately and does not block the calling thread.
+	 * @param millis  Number of milliseconds to wait
+	 */
+	public void schedule(long millis, final Runnable runnable)
+	{
+		timer.schedule(new TimerTask() {
+			public void run()
+			{
+				new Thread(runnable).start();
+			}			
+		}, millis);
+	}
+	
+	public CommandManager landing() {
 		q.add(new LandCommand());
+		return this;
 	}
 
-	public void flatTrim() {
+	public CommandManager flatTrim() {
 		q.add(new FlatTrimCommand());
+		return this;
 	}
 
-	public void manualTrim(float pitch, float roll, float yaw) {
+	public CommandManager manualTrim(float pitch, float roll, float yaw) {
 		q.add(new ManualTrimCommand(pitch, roll, yaw));
+		return this;
 	}
 
-	public void takeOff() {
+	public CommandManager takeOff() {
 		flatTrim();
 		q.add(new TakeOffCommand());
+		return this;
 	}
 
 	/**
 	 * See Developer Guide 6.5:
 	 */
-	public void emergency() {
+	public CommandManager emergency() {
 		q.add(new EmergencyCommand());
+		return this;
 	}
 
-	public void forward(int speed) {
-		move(0f, -perc2float(speed), 0f, 0f);
+	public CommandManager forward(int speed) {
+		return move(0f, -perc2float(speed), 0f, 0f);
 	}
 
-	public void backward(int speed) {
-		move(0f, perc2float(speed), 0f, 0f);
+	public CommandManager backward(int speed) {
+		return move(0f, perc2float(speed), 0f, 0f);
 	}
 
-	public void spinRight(int speed) {
-		move(0f, 0f, 0f, perc2float(speed));
+	public CommandManager spinRight(int speed) {
+		return move(0f, 0f, 0f, perc2float(speed));
 	}
 
-	public void spinLeft(int speed) {
-		move(0f, 0f, 0f, -perc2float(speed));
+	public CommandManager spinLeft(int speed) {
+		return move(0f, 0f, 0f, -perc2float(speed));
 	}
 
-	public void up(int speed) {
-		move(0f, 0f, perc2float(speed), 0f);
+	public CommandManager up(int speed) {
+		return move(0f, 0f, perc2float(speed), 0f);
 	}
 
-	public void down(int speed) {
-		move(0f, 0f, -perc2float(speed), 0f);
+	public CommandManager down(int speed) {
+		return move(0f, 0f, -perc2float(speed), 0f);
 	}
 
-	public void goRight(int speed) {
-		move(perc2float(speed), 0f, 0f, 0f);
+	public CommandManager goRight(int speed) {
+		return move(perc2float(speed), 0f, 0f, 0f);
 	}
 
-	public void goLeft(int speed) {
-		move(-perc2float(speed), 0f, 0f, 0f);
+	public CommandManager goLeft(int speed) {
+		return move(-perc2float(speed), 0f, 0f, 0f);
 	}
 
-	public void move(float lrtilt, float fbtilt, float vspeed, float aspeed, float magneto_psi,
+	public CommandManager move(float lrtilt, float fbtilt, float vspeed, float aspeed, float magneto_psi,
 			float magneto_psi_accuracy) {
 		lrtilt = limit(lrtilt, -1f, 1f);
 		fbtilt = limit(fbtilt, -1f, 1f);
@@ -114,27 +177,31 @@ public class CommandManager extends AbstractManager {
 		magneto_psi = limit(magneto_psi, -1f, 1f);
 		magneto_psi_accuracy = limit(magneto_psi_accuracy, -1f, 1f);
 		q.add(new PCMDMagCommand(false, false, true, lrtilt, fbtilt, vspeed, aspeed, magneto_psi, magneto_psi_accuracy));
+		return this;
 	}
 
-	public void move(float lrtilt, float fbtilt, float vspeed, float aspeed) {
+	public CommandManager move(float lrtilt, float fbtilt, float vspeed, float aspeed) {
 		lrtilt = limit(lrtilt, -1f, 1f);
 		fbtilt = limit(fbtilt, -1f, 1f);
 		vspeed = limit(vspeed, -1f, 1f);
 		aspeed = limit(aspeed, -1f, 1f);
 //		System.out.println("CommandManager: Move lrTilt=" + lrtilt + " fbtilt=" + fbtilt + " vspeed=" + vspeed + " aspeed=" + aspeed);
 		q.add(new MoveCommand(false, lrtilt, fbtilt, vspeed, aspeed));
+		return this;
 	}
 
-	public void move(int speedX, int speedY, int speedZ, int speedSpin) {
-		move(-perc2float(speedY), -perc2float(speedX), -perc2float(speedZ), -perc2float(speedSpin));
+	public CommandManager move(int speedX, int speedY, int speedZ, int speedSpin) {
+		return move(-perc2float(speedY), -perc2float(speedX), -perc2float(speedZ), -perc2float(speedSpin));
 	}
 
-	public void freeze() {
+	public CommandManager freeze() {
 		q.add(new FreezeCommand());
+		return this;
 	}
 
-	public void hover() {
+	public CommandManager hover() {
 		q.add(new HoverCommand());
+		return this;
 	}
 	
 	private float perc2float(int speed) {
@@ -145,9 +212,10 @@ public class CommandManager extends AbstractManager {
 	 * Set the current FPS of the live video codec.
 	 * @param fps  frames per second (min=15, max=30)
 	 */
-	public void setVideoCodecFps(int fps) {
+	public CommandManager setVideoCodecFps(int fps) {
 		fps = limit(fps, H264.MIN_FPS, H264.MAX_FPS);
 		q.add(new ConfigureCommand("video:codec_fps", fps));
+		return this;
 	}
 
 	/**
@@ -157,26 +225,29 @@ public class CommandManager extends AbstractManager {
 	 *              VideoBitRateMode.DYNAMIC  Video bitrate varies in [250;video:max_bitrate] kbps
 	 *              VideoBitRateMode.MANUAL  Video stream bitrate is fixed by the video:bitrate key
 	 */
-	public void setVideoBitrateControl(VideoBitRateMode mode) {
+	public CommandManager setVideoBitrateControl(VideoBitRateMode mode) {
 		q.add(new ConfigureCommand("video:bitrate_control_mode", mode.ordinal()));
+		return this;
 	}
 
 	/**
 	 * Sets the current bitrate of the video transmission (kilobits per second)
 	 * @param rate  bitrate (min=250, max=4000)
 	 */
-	public void setVideoBitrate(int rate) {
+	public CommandManager setVideoBitrate(int rate) {
 		rate = limit(rate, H264.MIN_BITRATE, H264.MAX_BITRATE);
 		q.add(new ConfigureCommand("video:bitrate", rate));
+		return this;
 	}
 
 	/**
 	 * Sets the maximum bitrate of the video transmission (kilobits per second)
 	 * @param rate  bitrate (min=250, max=4000)
 	 */
-	public void setMaxVideoBitrate(int rate) {
+	public CommandManager setMaxVideoBitrate(int rate) {
 		rate = limit(rate, H264.MIN_BITRATE, H264.MAX_BITRATE);
 		q.add(new ConfigureCommand("video:max_bitrate", rate));
+		return this;
 	}
 
 	/**
@@ -189,8 +260,9 @@ public class CommandManager extends AbstractManager {
 	 * MP4_360P_H264_360P_CODEC : Live stream with MPEG4.2 soft encoder. Record stream with H264 hardware encoder in 360p mode.
 	 * @param c  The video codec to use.
 	 */
-	public void setVideoCodec(VideoCodec c) {
+	public CommandManager setVideoCodec(VideoCodec c) {
 		q.add(new ConfigureCommand("video:video_codec", c.getValue()));
+		return this;
 	}
 
 	/**
@@ -198,8 +270,9 @@ public class CommandManager extends AbstractManager {
 	 * video stream will be recorded on the USB key.
 	 * @param b  If TRUE, video stream will be recorded
 	 */
-	public void setVideoOnUsb(boolean b) {
+	public CommandManager setVideoOnUsb(boolean b) {
 		q.add(new ConfigureCommand("video:video_on_usb", b));
+		return this;
 	}
 
 //	Reserved for future use, The default value is TRUE.
@@ -212,16 +285,18 @@ public class CommandManager extends AbstractManager {
 	 * which contain many debugging information that are useless for everyday flights.
 	 * @param b  If set to TRUE, a reduced set is sent. If set to FALSE, all the available data are sent.
 	 */
-	public void setNavDataDemo(boolean b) {
+	public CommandManager setNavDataDemo(boolean b) {
 		q.add(new ConfigureCommand("general:navdata_demo", b));
+		return this;
 	}
 
 	/**
 	 * When using navdata_demo, this configuration allows the application to ask for others navdata packets.
 	 * @param mask  I honestly do not know, where values for this mask are defined. Have a look at the User Guide (page 74 in v2.0.1)
 	 */
-	public void setNavDataOptions(int mask) {
+	public CommandManager setNavDataOptions(int mask) {
 		q.add(new ConfigureCommand("general:navdata_options", mask));
+		return this;
 	}
 
 	/**
@@ -230,16 +305,18 @@ public class CommandManager extends AbstractManager {
 	 * @param freq  It's frequency
 	 * @param duration  The duration in seconds
 	 */
-	public void setLedsAnimation(LEDAnimation anim, float freq, int duration) {
+	public CommandManager setLedsAnimation(LEDAnimation anim, float freq, int duration) {
 		q.add(new LEDAnimationCommand(anim, freq, duration));
+		return this;
 	}
 
 	/**
 	 * Activate this in order to detect outdoor hulls. Deactivate to detect indoor hulls.
 	 * @param b  TRUE for outdoor, FALSE for indoor hulls
 	 */
-	public void setDetectEnemyWithoutShell(boolean b) {
+	public CommandManager setDetectEnemyWithoutShell(boolean b) {
 		q.add(new ConfigureCommand("detect:enemy_without_shell", (b ? "1" : "0")));
+		return this;
 	}
 
 //	Only for ARDrone 1.0 with legacy groundstripe detection.
@@ -251,8 +328,9 @@ public class CommandManager extends AbstractManager {
 	 * The color of the hulls you want to detect.
 	 * @param c  Possible values are green (1), yellow (2) and blue (3)
 	 */
-	public void setEnemyColors(EnemyColor c) {
+	public CommandManager setEnemyColors(EnemyColor c) {
 		q.add(new ConfigureCommand("detect:enemy_colors", c.getValue()));
+		return this;
 	}
 
 	/**
@@ -262,10 +340,11 @@ public class CommandManager extends AbstractManager {
 	 * NOTE: The multiple detection mode allow the selection of different detections on each camera. 
 	 * Note that you should NEVER enable two similar detection on both cameras, as this will cause failures in the algorithms
 	 */
-	public void setDetectionType(CadType type) {
+	public CommandManager setDetectionType(CadType type) {
 		// TODO: push VisionCadType into special ConfigureCommand
 		int t = type.ordinal();
 		q.add(new ConfigureCommand("detect:detect_type", t));
+		return this;
 	}
 
 	/**
@@ -275,32 +354,37 @@ public class CommandManager extends AbstractManager {
 	 * NOTE: The multiple detection mode allow the selection of different detections on each camera. 
 	 * Note that you should NEVER enable two similar detection on both cameras, as this will cause failures in the algorithms
 	 */
-	public void setDetectionType(DetectionType dt, VisionTagType[] tagtypes) {
+	public CommandManager setDetectionType(DetectionType dt, VisionTagType[] tagtypes) {
 		int mask = VisionTagType.getMask(tagtypes);
 		q.add(new ConfigureCommand("detect:" + dt.getCmdSuffix(), mask));
+		return this;
 	}
 
-	public void setVisionParameters(int coarse_scale, int nb_pair, int loss_per, int nb_tracker_width,
+	public CommandManager setVisionParameters(int coarse_scale, int nb_pair, int loss_per, int nb_tracker_width,
 			int nb_tracker_height, int scale, int trans_max, int max_pair_dist, int noise) {
 		q.add(new VisionParametersCommand(coarse_scale, nb_pair, loss_per, nb_tracker_width, nb_tracker_height, scale,
 				trans_max, max_pair_dist, noise));
+		return this;
 	}
 
 	// TODO find out if still supported in Drone 2.0 and what are the options
-	public void setVisionOption(int option) {
+	public CommandManager setVisionOption(int option) {
 		q.add(new VisionOptionCommand(option));
+		return this;
 	}
 
 	// TODO find out if still supported in Drone 2.0
-	public void setGains(int pq_kp, int r_kp, int r_ki, int ea_kp, int ea_ki, int alt_kp, int alt_ki, int vz_kp,
+	public CommandManager setGains(int pq_kp, int r_kp, int r_ki, int ea_kp, int ea_ki, int alt_kp, int alt_ki, int vz_kp,
 			int vz_ki, int hovering_kp, int hovering_ki, int hovering_b_kp, int hovering_b_ki) {
 		q.add(new GainsCommand(pq_kp, r_kp, r_ki, ea_kp, ea_ki, alt_kp, alt_ki, vz_kp, vz_ki, hovering_kp, hovering_ki,
 				hovering_b_kp, hovering_b_ki));
+		return this;
 	}
 
 	// TODO find out if still supported in Drone 2.0
-	public void setRawCapture(boolean picture, boolean video) {
+	public CommandManager setRawCapture(boolean picture, boolean video) {
 		q.add(new RawCaptureCommand(picture, video));
+		return this;
 	}
 
 	/**
@@ -309,12 +393,13 @@ public class CommandManager extends AbstractManager {
 	 * This is intended to be an easier control mode for racing games.
 	 * @param b  TRUE, to enable combined raw mode, FALSE to disable.
 	 */
-	public void setEnableCombinedYaw(boolean b) {
+	public CommandManager setEnableCombinedYaw(boolean b) {
 		int level = 1;
 		if (b) {
 			level |= (1 << 2);
 		}
 		q.add(new ConfigureCommand("control:control_level", level));
+		return this;
 	}
 
 	/**
@@ -325,8 +410,9 @@ public class CommandManager extends AbstractManager {
 	 * added. This mode is the same as the previous one, except that the AR.Drone will always face the same direction.
 	 * @param mode
 	 */
-	public void setFlyingMode(FlyingMode mode) {
+	public CommandManager setFlyingMode(FlyingMode mode) {
 		q.add(new ConfigureCommand("control:flying_mode", mode.ordinal()));
+		return this;
 	}
 
 	/**
@@ -334,8 +420,9 @@ public class CommandManager extends AbstractManager {
 	 * gives the AR.Drone the maximum distance (in millimeters) allowed between the AR.Drone and the oriented roundel.
 	 * @param range  maximum distance (in millimeters)
 	 */
-	public void setHoveringRange(int range) {
+	public CommandManager setHoveringRange(int range) {
 		q.add(new ConfigureCommand("control:hovering_range", range));
+		return this;
 	}
 
 	/**
@@ -343,8 +430,9 @@ public class CommandManager extends AbstractManager {
 	 * @param angle  Maximum bending angle for the drone in radians, for both pitch and roll angles.
 	 *               This parameter is a positive floating-point value between 0 and 0.52 (ie. 30 deg).
 	 */
-	public void setMaxEulerAngle(float angle) {
+	public CommandManager setMaxEulerAngle(float angle) {
 		setMaxEulerAngle(Location.CURRENT, angle);
+		return this;
 	}
 
 	/**
@@ -353,19 +441,21 @@ public class CommandManager extends AbstractManager {
 	 * @param angle  Maximum bending angle for the drone in radians, for both pitch and roll angles.
 	 *               This parameter is a positive floating-point value between 0 and 0.52 (ie. 30 deg).
 	 */
-	public void setMaxEulerAngle(Location l, float angle) {
+	public CommandManager setMaxEulerAngle(Location l, float angle) {
 		angle = limit(angle, 0f, 0.52f);
 		System.out.println("CommandManager: setMaxEulerAngle (bendingAngle): " + angle + " rad");
 		String command = "control:" + l.getCommandPrefix() + "euler_angle_max";
 		q.add(new ConfigureCommand(command, String.valueOf(angle)));
+		return this;
 	}
 
 	/**
 	 * Set a maximum altitude for the drone.
 	 * @param altitude  Altitude in millimeters (max. 100000 = 100m)
 	 */
-	public void setMaxAltitude(int altitude) {
+	public CommandManager setMaxAltitude(int altitude) {
 		setMaxAltitude(Location.CURRENT, altitude);
+		return this;
 	}
 
 	/**
@@ -373,19 +463,21 @@ public class CommandManager extends AbstractManager {
 	 * @param l
 	 * @param altitude  Altitude in millimeters (max. 100000 = 100m)
 	 */
-	public void setMaxAltitude(Location l, int altitude) {
+	public CommandManager setMaxAltitude(Location l, int altitude) {
 		altitude = limit(altitude, 0, 100000);
 		System.out.println("CommandManager: setMaxAltitude: " + altitude + " mm");
 		String command = "control:" + l.getCommandPrefix() + "altitude_max";
 		q.add(new ConfigureCommand(command, altitude));
+		return this;
 	}
 
 	/**
 	 * Set a minimum altitude for the drone.
 	 * @param altitude  Altitude in millimeters
 	 */
-	public void setMinAltitude(int altitude) {
+	public CommandManager setMinAltitude(int altitude) {
 		setMinAltitude(Location.CURRENT, altitude);
+		return this;
 	}
 
 	/**
@@ -393,10 +485,11 @@ public class CommandManager extends AbstractManager {
 	 * @param l
 	 * @param altitude  Altitude in millimeters
 	 */
-	public void setMinAltitude(Location l, int altitude) {
+	public CommandManager setMinAltitude(Location l, int altitude) {
 		altitude = limit(altitude, 0, 100000);
 		String command = "control:" + l.getCommandPrefix() + "altitude_min";
 		q.add(new ConfigureCommand(command, altitude));
+		return this;
 	}
 
 	/**
@@ -404,8 +497,9 @@ public class CommandManager extends AbstractManager {
 	 * @param speed  Maximum vertical speed of the AR.Drone, in milimeters per second.
 	 *               Recommanded values goes from 200 to 2000. Others values may cause instability.
 	 */
-	public void setMaxVz(int speed) {
+	public CommandManager setMaxVz(int speed) {
 		setMaxVz(Location.CURRENT, speed);
+		return this;
 	}
 
 	/**
@@ -414,11 +508,12 @@ public class CommandManager extends AbstractManager {
 	 * @param speed  Maximum vertical speed of the AR.Drone, in milimeters per second.
 	 *               Recommanded values goes from 200 to 2000. Others values may cause instability.
 	 */
-	public void setMaxVz(Location l, int speed) {
+	public CommandManager setMaxVz(Location l, int speed) {
 		speed = limit(speed, 0, 2000);
 		System.out.println("CommandManager: setMaxVz (verticalSpeed): " + speed + " mm");
 		String command = "control:" + l.getCommandPrefix() + "control_vz_max";
 		q.add(new ConfigureCommand(command, speed));
+		return this;
 	}
 
 	/**
@@ -426,8 +521,9 @@ public class CommandManager extends AbstractManager {
 	 * @param speed  Maximum yaw speed of the AR.Drone, in radians per second.
      *               Recommended values go from 40/s to 350/s (approx 0.7rad/s to 6.11rad/s). Others values may cause instability.
 	 */
-	public void setMaxYaw(float speed) {
+	public CommandManager setMaxYaw(float speed) {
 		setMaxYaw(Location.CURRENT, speed);
+		return this;
 	}
 
 	/**
@@ -436,14 +532,16 @@ public class CommandManager extends AbstractManager {
 	 * @param speed  Maximum yaw speed of the AR.Drone, in radians per second.
      *               Recommended values go from 40/s to 350/s (approx 0.7rad/s to 6.11rad/s). Others values may cause instability.
 	 */
-	public void setMaxYaw(Location l, float speed) {
+	public CommandManager setMaxYaw(Location l, float speed) {
 		speed = limit(speed, 0.7f, 6.11f);
 		String command = "control:" + l.getCommandPrefix() + "control_yaw";
 		q.add(new ConfigureCommand(command, speed));
+		return this;
 	}
 
-	public void setCommand(ATCommand command) {
+	public CommandManager setCommand(ATCommand command) {
 		q.add(command);
+		return this;
 	}
 
 	/**
@@ -451,10 +549,11 @@ public class CommandManager extends AbstractManager {
 	 * @param flying_outdoor  TRUE, if flying outdoor. FALSE, if flying indoor
 	 * @param outdoor_hull  TRUE, if outdoor shell is used. FALSE, if indoor shell is used.
 	 */
-	public void setOutdoor(boolean flying_outdoor, boolean outdoor_hull) {
+	public CommandManager setOutdoor(boolean flying_outdoor, boolean outdoor_hull) {
 		System.out.println("CommandManager: setOutdoor(flyingOutdoor,usingOutdoorHull) = " + flying_outdoor + "," + outdoor_hull);
 		q.add(new ConfigureCommand("control:outdoor", flying_outdoor));
 		q.add(new ConfigureCommand("control:flight_without_shell", outdoor_hull));
+		return this;
 	}
 
 //	@Deprecated
@@ -472,14 +571,16 @@ public class CommandManager extends AbstractManager {
 //		q.add(new ConfigureCommand("control:control_iphone_tilt", String.valueOf(tilt)));
 //	}
 
-	public void animate(FlightAnimation a) {
+	public CommandManager animate(FlightAnimation a) {
 		q.add(new FlightAnimationCommand(a));
+		return this;
 	}
 
-	public void setPosition(double latitude, double longitude, double altitude) {
+	public CommandManager setPosition(double latitude, double longitude, double altitude) {
 		q.add(new ConfigureCommand("gps:latitude", latitude));
 		q.add(new ConfigureCommand("gps:longitude", longitude));
 		q.add(new ConfigureCommand("gps:altitude", altitude));
+		return this;
 	}
 
 	/**
@@ -487,24 +588,27 @@ public class CommandManager extends AbstractManager {
 	 * ultrasound perturbations between two AR.Drones.
 	 * @param f  Only two frequencies are availaible : 22:22 and 25 Hz.
 	 */
-	public void setUltrasoundFrequency(UltrasoundFrequency f) {
+	public CommandManager setUltrasoundFrequency(UltrasoundFrequency f) {
 		q.add(new ConfigureCommand("pic:ultrasound_freq", f.getValue()));
+		return this;
 	}
 
 	/**
 	 * The AR.Drone SSID. Changes are applied on reboot.
 	 * @param ssid  The new SSID, e.g. "myArdroneNetwork"
 	 */
-	public void setSSIDSinglePlayer(String ssid) {
+	public CommandManager setSSIDSinglePlayer(String ssid) {
 		q.add(new ConfigureCommand("network:ssid_single_player", ssid));
+		return this;
 	}
 
 	/**
 	 * The AR.Drone SSID for multi player. Currently unused.
 	 * @param ssid  The new SSID, e.g. "myArdroneNetwork"
 	 */
-	public void setSSIDMultiPlayer(String ssid) {
+	public CommandManager setSSIDMultiPlayer(String ssid) {
 		q.add(new ConfigureCommand("network:ssid_multi_player", ssid));
+		return this;
 	}
 
 	/**
@@ -516,37 +620,43 @@ public class CommandManager extends AbstractManager {
 	 * 2 : The drone tries to join the network as a station
 	 * @param mode
 	 */
-	public void setWifiMode(WifiMode mode) {
+	public CommandManager setWifiMode(WifiMode mode) {
 		q.add(new ConfigureCommand("network:wifi_mode", mode.ordinal()));
+		return this;
 	}
 
 	/**
 	 * Set the MAC address paired with the AR.Drone. Set to "00:00:00:00:00:00" to unpair the AR.Drone.
 	 * @param mac  The new MAC address.
 	 */
-	public void setOwnerMac(String mac) {
+	public CommandManager setOwnerMac(String mac) {
 		q.add(new ConfigureCommand("network:owner_mac", mac));
+		return this;
 	}
 
-	public void startRecordingNavData(String dirname) {
+	public CommandManager startRecordingNavData(String dirname) {
 		q.add(new ConfigureCommand("userbox:userbox_cmd", String.valueOf(UserBox.START.ordinal()) + "," + dirname));
+		return this;
 	}
 
-	public void cancelRecordingNavData() {
+	public CommandManager cancelRecordingNavData() {
 		q.add(new ConfigureCommand("userbox:userbox_cmd", UserBox.CANCEL.ordinal()));
+		return this;
 	}
 
-	public void stopRecording() {
+	public CommandManager stopRecording() {
 		q.add(new ConfigureCommand("userbox:userbox_cmd", UserBox.STOP.ordinal()));
+		return this;
 	}
 
 	private static final SimpleDateFormat USERBOXFORMAT = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US);
 
-	public void startRecordingPictures(int delay, int nshots) {
+	public CommandManager startRecordingPictures(int delay, int nshots) {
 		Date d = new Date();
 		final String label = USERBOXFORMAT.format(d);
 		q.add(new ConfigureCommand("userbox:userbox_cmd", String.valueOf(UserBox.SCREENSHOT.ordinal()) + ","
 				+ String.valueOf(delay) + "," + String.valueOf(nshots) + "," + label));
+		return this;
 	}
 
 //	public URL[] getRecordedNavDataURLs() throws IOException {
@@ -728,7 +838,7 @@ public class CommandManager extends AbstractManager {
 		System.out.println("doStop() called ? " + doStop + " ... Stopped " + getClass().getSimpleName());
 	}
 
-	private void initARDrone() {
+	private CommandManager initARDrone() {
 		// pmode parameter and first misc parameter are related
 		sendPMode(2);
 		sendMisc(2, 20, 2000, 3000);
@@ -739,6 +849,7 @@ public class CommandManager extends AbstractManager {
 		setMaxAltitude(10000);
 		setMaxVz(1000);
 		setMaxEulerAngle(0.25f);
+		return this;
 	}
 
 	private synchronized void sendCommand(ATCommand c) throws InterruptedException, IOException {
@@ -764,10 +875,11 @@ public class CommandManager extends AbstractManager {
 	private Object controlAckLock = new Object();
 	private boolean controlAck = false;
 
-	public void setControlAck(boolean b) {
+	public CommandManager setControlAck(boolean b) {
 		synchronized (controlAckLock) {
 			controlAck = b;
 			controlAckLock.notifyAll();
+			return this;
 		}
 	}
 

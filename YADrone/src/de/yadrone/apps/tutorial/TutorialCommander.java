@@ -35,43 +35,35 @@ public class TutorialCommander
 	
 	public void leftRightForwardBackward()
 	{
-		try
-		{
-			CommandManager cmd = drone.getCommandManager();
-			int speed = 30; // percentage of max speed
+		final CommandManager cmd = drone.getCommandManager();
+		final int speed = 30; // percentage of max speed
 			
-			cmd.takeOff();
-			Thread.sleep(5000);
-			
-			cmd.goLeft(speed);
-			Thread.sleep(1000);
-			
-			cmd.hover();
-			Thread.sleep(2000);
-			
-			cmd.goRight(speed);
-			Thread.sleep(1000);
-			
-			cmd.hover();
-			Thread.sleep(2000);
-			
-			cmd.forward(speed);
-			Thread.sleep(1000);
-			
-			cmd.hover();
-			Thread.sleep(2000);
-			
-			cmd.backward(speed);
-			Thread.sleep(1000);
-			
-			cmd.hover();
-			Thread.sleep(2000);
-			
-			cmd.landing();
-		}
-		catch (InterruptedException e) // may happen because of Thread.sleep() 
-		{
-			e.printStackTrace();
-		}
+		cmd.takeOff().doFor(5000);
+		
+		cmd.goLeft(speed).doFor(1000);
+		cmd.hover().doFor(2000);
+		cmd.goRight(speed).doFor(1000);
+		cmd.hover().doFor(2000);
+		cmd.forward(speed).doFor(2000);
+		cmd.hover().doFor(1000);
+		cmd.backward(speed).doFor(2000);
+		cmd.hover().doFor(2000);
+		cmd.landing();
+		
+//		cmd.schedule(5000, new Runnable() {
+//			public void run()
+//			{
+//				cmd.goLeft(speed).doFor(1000);
+//				cmd.hover().doFor(2000);
+//				cmd.goRight(speed).doFor(1000);
+//				cmd.hover().doFor(2000);
+//				cmd.forward(speed).doFor(2000);
+//				cmd.hover().doFor(1000);
+//				cmd.backward(speed).doFor(2000);
+//				cmd.hover().doFor(2000);
+//				cmd.landing();
+//			}			
+//		});
+
 	}
 }

@@ -48,7 +48,7 @@ public class CCFrame extends JFrame
                 }
         		
                 if ((width != getWidth()) || (height != getHeight()))
-                { // called once the uses changes the frame size
+                { // called once the user changes the frame size
                 	width = getWidth();
                 	height = getHeight();
                 	scaledImage = originalImage.getScaledInstance(getWidth(), getHeight(), Image.SCALE_AREA_AVERAGING);
@@ -60,9 +60,9 @@ public class CCFrame extends JFrame
         
         // the plugin manager is a mandatory component, because it is used to start all other plugins
         
-        PluginManager pluginManager = new PluginManager();
-        pluginManager.activate(ardrone);
+        final PluginManager pluginManager = new PluginManager();
         pluginManager.setDesktop(desktop);
+        pluginManager.activate(ardrone);
         
         JInternalFrame frame = new JInternalFrame(pluginManager.getTitle(), true, false, true, true);
 	    frame.setSize(500, 300);
@@ -84,6 +84,7 @@ public class CCFrame extends JFrame
 			public void windowActivated(WindowEvent e) { }
 			public void windowDeactivated(WindowEvent e) { }
 			public void windowClosing(WindowEvent e) {
+				pluginManager.deactivate();
 				drone.stop();
 				System.exit(0);
 			}

@@ -8,10 +8,16 @@ import java.awt.Insets;
 import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.Properties;
 import java.util.Set;
 
 import javax.swing.BorderFactory;
@@ -31,11 +37,21 @@ public class PluginManager extends JPanel implements ICCPlugin
 {
 	private IARDrone drone;
 	private JDesktopPane desktop;
+	private PluginProperties pluginProperties;
+	
+	/** This frame is used to get screen size and location upon initialization and finalization */
+	private Map<ICCPlugin, JInternalFrame> activePluginFrames;
 	
 	public PluginManager()
 	{
 		super(new GridBagLayout());
 		
+		pluginProperties = new PluginProperties();
+		activePluginFrames = new HashMap<ICCPlugin, JInternalFrame>();
+	}
+
+	private void init()
+	{
 		JPanel contentPane = new JPanel(new GridBagLayout());
 		
 		// look for all classes implementing the Plugin interface
@@ -77,9 +93,9 @@ public class PluginManager extends JPanel implements ICCPlugin
 		contentPane.add(new JLabel(""), new GridBagConstraints(0,contentPane.getComponentCount(),1,1,1,1,GridBagConstraints.FIRST_LINE_START, GridBagConstraints.BOTH, new Insets(0,0,0,0), 0, 0));
 		
 		add(new JScrollPane(contentPane), new GridBagConstraints(0,0,1,1,1,1,GridBagConstraints.FIRST_LINE_START, GridBagConstraints.BOTH, new Insets(0,0,0,0), 0, 0));
-		
-	}
 
+	}
+	
 	private JPanel createPluginPanel(final ICCPlugin plugin)
 	{
 		final JButton button = new JButton("Activate");
@@ -103,17 +119,8 @@ public class PluginManager extends JPanel implements ICCPlugin
 						// visual plugins are added to the desktop pane
 						
 						frame = new JInternalFrame(plugin.getTitle(), true, false, true, true);
-					    frame.setSize(plugin.getScreenSize());
-					    frame.setLocation(plugin.getScreenLocation());
-					    frame.setContentPane(plugin.getPanel());
-					    frame.setVisible(true);
-					    
-						desktop.add(frame);
-						
-						// move frame to front and give focus 
-						frame.moveToFront();
-						frame.requestFocus();
-						desktop.setSelectedFrame(frame);
+					    initPluginInternalFrame(plugin, frame);
+					    activePluginFrames.put(plugin, frame);
 					}
 				}
 				else
@@ -125,6 +132,8 @@ public class PluginManager extends JPanel implements ICCPlugin
 					{
 						frame.setVisible(false);
 						desktop.remove(frame);
+						activePluginFrames.remove(plugin);
+						pluginProperties.setAutoStart(plugin.getTitle(), false);
 					}
 				}
 				isStarted = !isStarted;
@@ -135,6 +144,10 @@ public class PluginManager extends JPanel implements ICCPlugin
 		panel.setBorder(BorderFactory.createTitledBorder(plugin.getTitle()));
 		panel.add(button, new GridBagConstraints(0,0,1,1,0,0,GridBagConstraints.FIRST_LINE_START, GridBagConstraints.NONE, new Insets(0,0,0,0), 0, 0));
 		panel.add(new JLabel("<html><i>" + plugin.getDescription() + "</i></html>"), new GridBagConstraints(1,0,1,1,1,0,GridBagConstraints.FIRST_LINE_START, GridBagConstraints.HORIZONTAL, new Insets(0,10,0,0), 0, 0));
+		
+		// start plugin if corresponding properties are set
+		if (pluginProperties.isAutoStart(plugin.getTitle()))
+			button.doClick();
 		
 		return panel;
 	}
@@ -148,6 +161,22 @@ public class PluginManager extends JPanel implements ICCPlugin
 		return panel;
 	}
 	
+	private void initPluginInternalFrame(final ICCPlugin plugin, JInternalFrame frame)
+	{
+		// load properties and init frame
+		frame.setSize(pluginProperties.isAutoStart(plugin.getTitle()) ? pluginProperties.getScreenSize(plugin.getTitle()) : plugin.getScreenSize());
+	    frame.setLocation(pluginProperties.isAutoStart(plugin.getTitle()) ? pluginProperties.getScreenLocation(plugin.getTitle()) : plugin.getScreenLocation());
+	    frame.setContentPane(plugin.getPanel());
+	    frame.setVisible(true);
+	    
+		desktop.add(frame);
+		
+		// move frame to front and give focus 
+		frame.moveToFront();
+		frame.requestFocus();
+		desktop.setSelectedFrame(frame);
+	}
+	
 	public void setDesktop(JDesktopPane desktop)
 	{
 		this.desktop = desktop;
@@ -156,11 +185,20 @@ public class PluginManager extends JPanel implements ICCPlugin
 	public void activate(IARDrone drone)
 	{
 		this.drone = drone;
+		init();
 	}
 	
 	public void deactivate()
 	{
-		
+		// store all plugin properties
+		Iterator<ICCPlugin> plugins = activePluginFrames.keySet().iterator();
+		while (plugins.hasNext())
+		{
+			ICCPlugin plugin = plugins.next();
+			pluginProperties.setAutoStart(plugin.getTitle(), true);
+			pluginProperties.setScreenLocation(plugin.getTitle(), activePluginFrames.get(plugin).getLocation());
+			pluginProperties.setScreenSize(plugin.getTitle(), activePluginFrames.get(plugin).getSize());
+		}
 	}
 
 	public String getTitle()
@@ -191,5 +229,79 @@ public class PluginManager extends JPanel implements ICCPlugin
 	public JPanel getPanel()
 	{
 		return this;
-	}	
+	}
+	
+	private class PluginProperties extends Properties
+	{
+		private String FILENAME = "controlcenter.properties";
+		
+		public PluginProperties()
+		{
+			super();
+			load();
+		}
+		
+		public boolean isAutoStart(String title)
+		{
+			
+			return Boolean.parseBoolean(getProperty(title + "_autostart", "false"));
+		}
+		
+		public void setAutoStart(String title, boolean autoStart)
+		{
+			setProperty(title + "_autostart", autoStart+"");
+			store();
+		}
+
+		public Dimension getScreenSize(String title)
+		{
+			String size = getProperty(title + "_size");
+			return new Dimension(Integer.parseInt(size.substring(0, size.indexOf("x"))), Integer.parseInt(size.substring(size.indexOf("x") + 1)));
+		}
+		
+		public void setScreenSize(String title, Dimension size)
+		{
+			setProperty(title + "_size", (int)size.getWidth() + "x" + (int)size.getHeight());
+			store();
+		}
+		
+		public Point getScreenLocation(String title)
+		{
+			String location = getProperty(title + "_location");
+			return new Point(Integer.parseInt(location.substring(0, location.indexOf(","))), Integer.parseInt(location.substring(location.indexOf(",") + 1)));
+		}
+		
+		public void setScreenLocation(String title, Point location)
+		{
+			setProperty(title + "_location", (int)location.getX() + "," + (int)location.getY());
+			store();
+		}
+		
+		private void load()
+		{
+			try
+			{
+				FileReader reader = new FileReader(FILENAME);
+				load(reader);
+			}
+			catch (Exception e)
+			{
+				// probably not found (started for the first time)
+				// e.printStackTrace();
+			}
+		}
+		
+		private void store()
+		{
+			try
+			{
+				FileWriter writer = new FileWriter(FILENAME);
+				store(writer, "YADrone Control Center Properties" );
+			}
+			catch (IOException e)
+			{
+				e.printStackTrace();
+			}
+		}
+	}
 }

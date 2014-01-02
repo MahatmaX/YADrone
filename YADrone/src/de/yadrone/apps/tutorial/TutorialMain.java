@@ -22,22 +22,24 @@ public class TutorialMain
 			new TutorialAttitudeListener(drone);
 			
 			// Tutorial Section 3
-			new TutorialVideoListener(drone);
+//			new TutorialVideoListener(drone);
 			
 			// Tutorial Section 4
-			TutorialCommander commander = new TutorialCommander(drone);
+//			TutorialCommander commander = new TutorialCommander(drone);
 //			commander.animateLEDs();
 //			commander.takeOffAndLand();
-			commander.leftRightForwardBackward();
+//			commander.leftRightForwardBackward();
 		}
 		catch (Exception exc)
 		{
 			exc.printStackTrace();
-
+		}
+		finally
+		{
 			if (drone != null)
 				drone.stop();
 
-			System.exit(-1);
+			System.exit(0);
 		}
 	}
 }

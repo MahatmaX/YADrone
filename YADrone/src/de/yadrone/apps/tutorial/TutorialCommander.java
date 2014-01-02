@@ -42,28 +42,17 @@ public class TutorialCommander
 		
 		cmd.goLeft(speed).doFor(1000);
 		cmd.hover().doFor(2000);
+		
 		cmd.goRight(speed).doFor(1000);
 		cmd.hover().doFor(2000);
+		
 		cmd.forward(speed).doFor(2000);
 		cmd.hover().doFor(1000);
+		
 		cmd.backward(speed).doFor(2000);
 		cmd.hover().doFor(2000);
+		
 		cmd.landing();
 		
-//		cmd.schedule(5000, new Runnable() {
-//			public void run()
-//			{
-//				cmd.goLeft(speed).doFor(1000);
-//				cmd.hover().doFor(2000);
-//				cmd.goRight(speed).doFor(1000);
-//				cmd.hover().doFor(2000);
-//				cmd.forward(speed).doFor(2000);
-//				cmd.hover().doFor(1000);
-//				cmd.backward(speed).doFor(2000);
-//				cmd.hover().doFor(2000);
-//				cmd.landing();
-//			}			
-//		});
-
 	}
 }

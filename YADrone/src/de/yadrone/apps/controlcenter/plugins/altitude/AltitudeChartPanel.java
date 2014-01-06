@@ -37,14 +37,10 @@ public class AltitudeChartPanel extends JPanel implements ICCPlugin
 
 		public void receivedAltitude(int altitude)
 		{
-			System.out.println("Altitude: " + altitude);
 			chart.setAltitude(altitude);
 		}
 
-		public void receivedExtendedAltitude(Altitude altitude)
-		{
-			System.out.println("Extended Altitude: " + altitude);
-		}
+		public void receivedExtendedAltitude(Altitude altitude) { }
 		
 	};
 	

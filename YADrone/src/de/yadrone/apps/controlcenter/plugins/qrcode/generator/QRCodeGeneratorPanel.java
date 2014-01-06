@@ -115,17 +115,14 @@ public class QRCodeGeneratorPanel extends JPanel implements ICCPlugin
 		job.setPrintable(new Printable() {
 			public int print(Graphics g, PageFormat pf, int page) throws PrinterException
 			{
-				// We have only one page, and 'page'
-				// is zero-based
+				// We have only one page, and 'page' is zero-based
 				if (page > 0)
 				{
 					return NO_SUCH_PAGE;
 				}
 
-				// User (0,0) is typically outside the
-				// imageable area, so we must translate
-				// by the X and Y values in the PageFormat
-				// to avoid clipping.
+				// User (0,0) is typically outside the imageable area, so we must translate
+				// by the X and Y values in the PageFormat to avoid clipping.
 				Graphics2D g2d = (Graphics2D) g;
 				g2d.translate(pf.getImageableX(), pf.getImageableY());
 
@@ -133,8 +130,7 @@ public class QRCodeGeneratorPanel extends JPanel implements ICCPlugin
 				g.drawImage(((ImageIcon) image.getIcon()).getImage(), 0, 0, image.getWidth(), image.getHeight(), null);
 				g.drawString(text.getText(), 20, image.getHeight());
 				
-				// tell the caller that this page is part
-				// of the printed document
+				// tell the caller that this page is part of the printed document
 				return PAGE_EXISTS;
 			}
 		});

@@ -37,6 +37,8 @@ public class KeyboardLayoutPanel extends JPanel implements ICCPlugin
     private JRadioButton originalButton;;
     private JRadioButton alternativeButton;;
     
+    private IARDrone drone;
+    
 	public KeyboardLayoutPanel()
 	{
 		loadImage(CCPropertyManager.getInstance().isKeyboardCommandManagerAlternative());
@@ -46,6 +48,7 @@ public class KeyboardLayoutPanel extends JPanel implements ICCPlugin
 		originalButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e)
 			{
+				cmdManager = new KeyboardCommandManager(drone);
 				CCPropertyManager.getInstance().setKeyboardCommandManagerAlternative(false);
 				loadImage(CCPropertyManager.getInstance().isKeyboardCommandManagerAlternative());
 				repaint();
@@ -58,6 +61,7 @@ public class KeyboardLayoutPanel extends JPanel implements ICCPlugin
 		alternativeButton.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e)
 			{
+				cmdManager = new KeyboardCommandManagerAlternative(drone);
 				CCPropertyManager.getInstance().setKeyboardCommandManagerAlternative(true);
 				loadImage(CCPropertyManager.getInstance().isKeyboardCommandManagerAlternative());
 				repaint();
@@ -122,9 +126,11 @@ public class KeyboardLayoutPanel extends JPanel implements ICCPlugin
             return false;
 		}
 	};
-	
-    public void activate(IARDrone drone)
+
+	public void activate(IARDrone drone)
 	{
+    	this.drone = drone;
+    	
     	if (CCPropertyManager.getInstance().isKeyboardCommandManagerAlternative())
     		cmdManager = new KeyboardCommandManagerAlternative(drone);
     	else

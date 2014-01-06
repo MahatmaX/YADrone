@@ -9,7 +9,7 @@ import de.yadrone.base.IARDrone;
 
 public class KeyboardCommandManager implements KeyListener
 {
-	private IARDrone drone;
+	protected IARDrone drone;
 	
 	public KeyboardCommandManager(IARDrone ardrone)
 	{
@@ -33,7 +33,7 @@ public class KeyboardCommandManager implements KeyListener
 		handleCommand(key, mod);
 	}
 
-	public void handleCommand(int key, int mod)
+	protected void handleCommand(int key, int mod)
 	{
 		// just for debugging
 //		if (key > 0)

@@ -412,6 +412,7 @@ public class NavDataManager extends AbstractManager {
 			int tag = b.getShort() & 0xFFFF;
 			int payloadSize = (b.getShort() & 0xFFFF) - 4;
 			ByteBuffer optionData = b.slice().order(ByteOrder.LITTLE_ENDIAN);
+			payloadSize = Math.min(payloadSize, optionData.remaining()); // added due to new AR.Drone firmware version as of 06.01.2014 (don't know which version > 2.3.3 and < 2.4.8 caused the change)
 			optionData.limit(payloadSize);
 			parseOption(tag, optionData);
 			b.position(b.position() + payloadSize);

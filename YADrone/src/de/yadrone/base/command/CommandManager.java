@@ -835,6 +835,7 @@ public class CommandManager extends AbstractManager {
 			}
 		}
 		close();
+		timer.cancel();
 		System.out.println("doStop() called ? " + doStop + " ... Stopped " + getClass().getSimpleName());
 	}
 

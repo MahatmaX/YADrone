@@ -8,16 +8,12 @@ import java.awt.Insets;
 import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Set;
 
 import javax.swing.BorderFactory;
@@ -30,6 +26,7 @@ import javax.swing.JScrollPane;
 
 import org.reflections.Reflections;
 
+import de.yadrone.apps.controlcenter.CCPropertyManager;
 import de.yadrone.apps.controlcenter.ICCPlugin;
 import de.yadrone.base.IARDrone;
 
@@ -37,7 +34,7 @@ public class PluginManager extends JPanel implements ICCPlugin
 {
 	private IARDrone drone;
 	private JDesktopPane desktop;
-	private PluginProperties pluginProperties;
+	private CCPropertyManager pluginProperties;
 	
 	/** This frame is used to get screen size and location upon initialization and finalization */
 	private Map<ICCPlugin, JInternalFrame> activePluginFrames;
@@ -46,7 +43,8 @@ public class PluginManager extends JPanel implements ICCPlugin
 	{
 		super(new GridBagLayout());
 		
-		pluginProperties = new PluginProperties();
+		pluginProperties = CCPropertyManager.getInstance();
+		
 		activePluginFrames = new HashMap<ICCPlugin, JInternalFrame>();
 	}
 
@@ -133,7 +131,7 @@ public class PluginManager extends JPanel implements ICCPlugin
 						frame.setVisible(false);
 						desktop.remove(frame);
 						activePluginFrames.remove(plugin);
-						pluginProperties.setAutoStart(plugin.getTitle(), false);
+						pluginProperties.setPluginAutoStart(plugin.getTitle(), false);
 					}
 				}
 				isStarted = !isStarted;
@@ -146,7 +144,7 @@ public class PluginManager extends JPanel implements ICCPlugin
 		panel.add(new JLabel("<html><i>" + plugin.getDescription() + "</i></html>"), new GridBagConstraints(1,0,1,1,1,0,GridBagConstraints.FIRST_LINE_START, GridBagConstraints.HORIZONTAL, new Insets(0,10,0,0), 0, 0));
 		
 		// start plugin if corresponding properties are set
-		if (pluginProperties.isAutoStart(plugin.getTitle()))
+		if (pluginProperties.isPluginAutoStart(plugin.getTitle()))
 			button.doClick();
 		
 		return panel;
@@ -164,8 +162,8 @@ public class PluginManager extends JPanel implements ICCPlugin
 	private void initPluginInternalFrame(final ICCPlugin plugin, JInternalFrame frame)
 	{
 		// load properties and init frame
-		frame.setSize(pluginProperties.isAutoStart(plugin.getTitle()) ? pluginProperties.getScreenSize(plugin.getTitle()) : plugin.getScreenSize());
-	    frame.setLocation(pluginProperties.isAutoStart(plugin.getTitle()) ? pluginProperties.getScreenLocation(plugin.getTitle()) : plugin.getScreenLocation());
+		frame.setSize(pluginProperties.isPluginAutoStart(plugin.getTitle()) ? pluginProperties.getPluginScreenSize(plugin.getTitle()) : plugin.getScreenSize());
+	    frame.setLocation(pluginProperties.isPluginAutoStart(plugin.getTitle()) ? pluginProperties.getPluginScreenLocation(plugin.getTitle()) : plugin.getScreenLocation());
 	    frame.setContentPane(plugin.getPanel());
 	    frame.setVisible(true);
 	    
@@ -195,9 +193,9 @@ public class PluginManager extends JPanel implements ICCPlugin
 		while (plugins.hasNext())
 		{
 			ICCPlugin plugin = plugins.next();
-			pluginProperties.setAutoStart(plugin.getTitle(), true);
-			pluginProperties.setScreenLocation(plugin.getTitle(), activePluginFrames.get(plugin).getLocation());
-			pluginProperties.setScreenSize(plugin.getTitle(), activePluginFrames.get(plugin).getSize());
+			pluginProperties.setPluginAutoStart(plugin.getTitle(), true);
+			pluginProperties.setPluginScreenLocation(plugin.getTitle(), activePluginFrames.get(plugin).getLocation());
+			pluginProperties.setPluginScreenSize(plugin.getTitle(), activePluginFrames.get(plugin).getSize());
 		}
 	}
 
@@ -229,79 +227,5 @@ public class PluginManager extends JPanel implements ICCPlugin
 	public JPanel getPanel()
 	{
 		return this;
-	}
-	
-	private class PluginProperties extends Properties
-	{
-		private String FILENAME = "controlcenter.properties";
-		
-		public PluginProperties()
-		{
-			super();
-			load();
-		}
-		
-		public boolean isAutoStart(String title)
-		{
-			
-			return Boolean.parseBoolean(getProperty(title + "_autostart", "false"));
-		}
-		
-		public void setAutoStart(String title, boolean autoStart)
-		{
-			setProperty(title + "_autostart", autoStart+"");
-			store();
-		}
-
-		public Dimension getScreenSize(String title)
-		{
-			String size = getProperty(title + "_size");
-			return new Dimension(Integer.parseInt(size.substring(0, size.indexOf("x"))), Integer.parseInt(size.substring(size.indexOf("x") + 1)));
-		}
-		
-		public void setScreenSize(String title, Dimension size)
-		{
-			setProperty(title + "_size", (int)size.getWidth() + "x" + (int)size.getHeight());
-			store();
-		}
-		
-		public Point getScreenLocation(String title)
-		{
-			String location = getProperty(title + "_location");
-			return new Point(Integer.parseInt(location.substring(0, location.indexOf(","))), Integer.parseInt(location.substring(location.indexOf(",") + 1)));
-		}
-		
-		public void setScreenLocation(String title, Point location)
-		{
-			setProperty(title + "_location", (int)location.getX() + "," + (int)location.getY());
-			store();
-		}
-		
-		private void load()
-		{
-			try
-			{
-				FileReader reader = new FileReader(FILENAME);
-				load(reader);
-			}
-			catch (Exception e)
-			{
-				// probably not found (started for the first time)
-				// e.printStackTrace();
-			}
-		}
-		
-		private void store()
-		{
-			try
-			{
-				FileWriter writer = new FileWriter(FILENAME);
-				store(writer, "YADrone Control Center Properties" );
-			}
-			catch (IOException e)
-			{
-				e.printStackTrace();
-			}
-		}
 	}
 }

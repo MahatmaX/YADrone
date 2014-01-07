@@ -18,26 +18,33 @@ SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PRO
 package de.yadrone.base.video;
 
 import java.awt.image.BufferedImage;
+import java.io.IOException;
 import java.net.InetAddress;
 import java.util.ArrayList;
 
-
 import de.yadrone.base.command.CommandManager;
 import de.yadrone.base.command.VideoBitRateMode;
+import de.yadrone.base.exception.IExceptionListener;
+import de.yadrone.base.exception.VideoException;
 import de.yadrone.base.manager.AbstractTCPManager;
 import de.yadrone.base.utils.ARDroneUtils;
 
-public class VideoManager extends AbstractTCPManager implements ImageListener {
+public class VideoManager extends AbstractTCPManager implements ImageListener 
+{
+	private IExceptionListener excListener;
+	
 	private VideoDecoder decoder;
 
 	private CommandManager manager = null;
 
 	private ArrayList<ImageListener> listener = new ArrayList<ImageListener>();
 
-	public VideoManager(InetAddress inetaddr, CommandManager manager, VideoDecoder decoder) {
+	public VideoManager(InetAddress inetaddr, CommandManager manager, VideoDecoder decoder, IExceptionListener excListener) 
+	{
 		super(inetaddr);
 		this.manager = manager;
 		this.decoder = decoder;
+		this.excListener = excListener;
 	}
 
 	public void addImageListener(ImageListener listener) {
@@ -61,7 +68,8 @@ public class VideoManager extends AbstractTCPManager implements ImageListener {
 		}
 	}
 	
-	public boolean connect(int port) {
+	public boolean connect(int port) throws IOException
+	{
 		if (decoder == null)
 			return false;
 
@@ -72,12 +80,20 @@ public class VideoManager extends AbstractTCPManager implements ImageListener {
 	public void run() {
 		if (decoder == null)
 			return;
-		connect(ARDroneUtils.VIDEO_PORT);
-		ticklePort(ARDroneUtils.VIDEO_PORT);
-		
-		manager.setVideoBitrateControl(VideoBitRateMode.DISABLED); // bitrate set to maximum
-		
-		decoder.decode(getInputStream());
+		try
+		{
+			connect(ARDroneUtils.VIDEO_PORT);
+			ticklePort(ARDroneUtils.VIDEO_PORT);
+			
+			manager.setVideoBitrateControl(VideoBitRateMode.DISABLED); // bitrate set to maximum
+			
+			decoder.decode(getInputStream());
+		}
+		catch(Exception exc)
+		{
+			exc.printStackTrace();
+			excListener.exeptionOccurred(new VideoException(exc));
+		}
 		
 		close();
 	}

@@ -27,13 +27,17 @@ import java.util.zip.CRC32;
 
 import de.yadrone.base.command.CommandManager;
 import de.yadrone.base.command.DetectionType;
+import de.yadrone.base.exception.IExceptionListener;
 import de.yadrone.base.manager.AbstractManager;
 import de.yadrone.base.utils.ARDroneUtils;
 
 //TODO: refactor parsing code into separate classes but need to think about how to put the listener code
 //option: make it one abstract listener, disadvantage: each client has many methods to implement
-public class NavDataManager extends AbstractManager {
+public class NavDataManager extends AbstractManager 
+{
 
+	private IExceptionListener excListener;
+	
 	private static final int NB_ACCS = 3;
 	private static final int NB_GYROS = 3;
 
@@ -83,9 +87,11 @@ public class NavDataManager extends AbstractManager {
 	private boolean maskChanged = true;
 	private int checksum = 0;
 
-	public NavDataManager(InetAddress inetaddr, CommandManager manager) {
+	public NavDataManager(InetAddress inetaddr, CommandManager manager, IExceptionListener excListener) 
+	{
 		super(inetaddr);
 		this.manager = manager;
+		this.excListener = excListener;
 	}
 
 	private void setMask(boolean reset, int[] tags) {
@@ -374,9 +380,14 @@ public class NavDataManager extends AbstractManager {
 					manager.setNavDataOptions(mask);
 					maskChanged = false;
 				}
-			} catch (SocketTimeoutException t) {
+			} 
+			catch (SocketTimeoutException t) 
+			{
 				System.err.println("Navdata reception timeout");
-			} catch (Throwable t) {
+				excListener.exeptionOccurred(new de.yadrone.base.exception.NavDataException(t));
+			} 
+			catch (Throwable t) 
+			{
 				// continue whatever goes wrong
 				t.printStackTrace();
 			}

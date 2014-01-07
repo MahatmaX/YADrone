@@ -21,6 +21,7 @@ package de.yadrone.base;
 import de.yadrone.base.ARDrone.ISpeedListener;
 import de.yadrone.base.command.CommandManager;
 import de.yadrone.base.configuration.ConfigurationManager;
+import de.yadrone.base.exception.IExceptionListener;
 import de.yadrone.base.navdata.NavDataManager;
 import de.yadrone.base.video.VideoManager;
 
@@ -66,6 +67,9 @@ public interface IARDrone {
 	public void setSpeed(int speed);
 	public void addSpeedListener(ISpeedListener speedListener);
 	public void removeSpeedListener(ISpeedListener speedListener);
+	
+	public void addExceptionListener(IExceptionListener exceptionListener);
+	public void removeExceptionListener(IExceptionListener exceptionListener);
 	
 	//set max/min altitude
 	public void setMaxAltitude(int altitude);

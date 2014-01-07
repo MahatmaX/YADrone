@@ -19,20 +19,24 @@ package de.yadrone.base;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 import java.util.StringTokenizer;
 
 import de.yadrone.base.command.CommandManager;
 import de.yadrone.base.command.VideoChannel;
 import de.yadrone.base.configuration.ConfigurationManager;
+import de.yadrone.base.exception.ARDroneException;
+import de.yadrone.base.exception.IExceptionListener;
 import de.yadrone.base.navdata.NavDataManager;
 import de.yadrone.base.video.VideoDecoder;
 import de.yadrone.base.video.VideoManager;
 import de.yadrone.base.video.xuggler.XugglerDecoder;
 
-public class ARDrone implements IARDrone {
+public class ARDrone implements IARDrone, IExceptionListener {
 
 	/** default ip address */
 	private static final String IP_ADDRESS = "192.168.1.1";
@@ -46,6 +50,8 @@ public class ARDrone implements IARDrone {
 	private VideoManager videoManager = null;
 	private NavDataManager navdataManager = null;
 	private ConfigurationManager configurationManager = null;
+	
+	private List<IExceptionListener> excListenerList = null;
 
 	// The speed setting has been moved into this class to allow the commandmanager to stay simple and to be able to do
 	// more advanced speed calculations for example based on the actual velocity
@@ -71,12 +77,14 @@ public class ARDrone implements IARDrone {
 		this.ipaddr = ipaddr;
 		this.videoDecoder = videoDecoder;
 		this.speedListener = new HashSet<ISpeedListener>();
+		this.excListenerList = new ArrayList<IExceptionListener>();
 	}
 
 	public synchronized CommandManager getCommandManager() {
 		if (commandManager == null) {
 			InetAddress ia = getInetAddress();
-			commandManager = new CommandManager(ia);
+			commandManager = new CommandManager(ia, this);
+			commandManager.start();
 		}
 		return commandManager;
 	}
@@ -85,7 +93,8 @@ public class ARDrone implements IARDrone {
 		if (navdataManager == null) {
 			InetAddress ia = getInetAddress();
 			CommandManager cm = getCommandManager();
-			navdataManager = new NavDataManager(ia, cm);
+			navdataManager = new NavDataManager(ia, cm, this);
+			navdataManager.start();
 		}
 		return navdataManager;
 	}
@@ -99,7 +108,8 @@ public class ARDrone implements IARDrone {
 		if (videoManager == null) {
 			InetAddress ia = getInetAddress();
 			CommandManager cm = getCommandManager();
-			videoManager = new VideoManager(ia, cm, videoDecoder);
+			videoManager = new VideoManager(ia, cm, videoDecoder, this);
+			videoManager.start();
 		}
 		return videoManager;
 	}
@@ -108,7 +118,8 @@ public class ARDrone implements IARDrone {
 		if (configurationManager == null) {
 			InetAddress ia = getInetAddress();
 			CommandManager cm = getCommandManager();
-			configurationManager = new ConfigurationManager(ia, cm);
+			configurationManager = new ConfigurationManager(ia, cm, this);
+			configurationManager.start();
 		}
 		return configurationManager;
 	}
@@ -130,15 +141,11 @@ public class ARDrone implements IARDrone {
 
 	@Override
 	public void start() {
-		CommandManager cm = getCommandManager();
-		cm.start();
-		ConfigurationManager cfgm = getConfigurationManager();
-		cfgm.start();
-		NavDataManager nm = getNavDataManager();
-		nm.start();
-		VideoManager vm = getVideoManager();
-		if (vm != null)
-			vm.start();
+		// call get to init and start manager
+		getCommandManager();
+		getConfigurationManager();
+		getNavDataManager();
+		getVideoManager();
 	}
 
 	@Override
@@ -310,6 +317,30 @@ public class ARDrone implements IARDrone {
 		public void speedUpdated(int speed);		
 	}
 	
+	public void addExceptionListener(IExceptionListener exceptionListener)
+	{
+		this.excListenerList.add(exceptionListener);
+	}
+	
+	public void removeExceptionListener(IExceptionListener exceptionListener)
+	{
+		this.excListenerList.remove(exceptionListener);
+	}
+	
+	private void informExceptionListener(ARDroneException exception)
+	{
+		for (int i=0; i < excListenerList.size(); i++)
+			excListenerList.get(i).exeptionOccurred(exception);
+	}
+	
+	/**
+	 * Call upon an exception occurred in one of the managers
+	 */
+	public void exeptionOccurred(ARDroneException exc)
+	{
+		informExceptionListener(exc);
+	}
+	
 	/**
 	 * print error message
 	 * 
@@ -340,5 +371,4 @@ public class ARDrone implements IARDrone {
 		}
 		return inetaddr;
 	}
-
 }

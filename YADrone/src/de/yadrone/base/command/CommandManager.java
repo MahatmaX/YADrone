@@ -27,21 +27,25 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
 
+import de.yadrone.base.exception.CommandException;
+import de.yadrone.base.exception.IExceptionListener;
 import de.yadrone.base.manager.AbstractManager;
 import de.yadrone.base.navdata.CadType;
 import de.yadrone.base.utils.ARDroneUtils;
 
 public class CommandManager extends AbstractManager {
 
+	private IExceptionListener excListener;
 	private CommandQueue q;
 	private Timer timer;
 
 	private static int seq = 1;
 
-	public CommandManager(InetAddress inetaddr) {
+	public CommandManager(InetAddress inetaddr, IExceptionListener excListener) {
 		super(inetaddr);
 		this.q = new CommandQueue(100);
 		this.timer = new Timer("YADrone CommandManager Timer");
+		this.excListener = excListener;
 		initARDrone();
 	}
 
@@ -828,10 +832,16 @@ public class CommandManager extends AbstractManager {
 				} else {
 					sendCommand(c);
 				}
-			} catch (InterruptedException e) {
+			} 
+			catch (InterruptedException e) 
+			{
+				e.printStackTrace();
 				doStop = true;
-			} catch (Throwable t) {
+				excListener.exeptionOccurred(new CommandException(e));
+			} 
+			catch (Throwable t) {
 				t.printStackTrace();
+				excListener.exeptionOccurred(new CommandException(t));
 			}
 		}
 		close();
@@ -855,7 +865,7 @@ public class CommandManager extends AbstractManager {
 
 	private synchronized void sendCommand(ATCommand c) throws InterruptedException, IOException {
 		if (!(c instanceof KeepAliveCommand)) {
-			// System.out.println("CommandManager: send " + c.getCommandString(seq));
+			 System.out.println("CommandManager: send " + c.getCommandString(seq));
 		}
 		byte[] buffer = c.getPacket(seq++);
 		DatagramPacket packet = new DatagramPacket(buffer, buffer.length, inetaddr, ARDroneUtils.PORT);
@@ -895,6 +905,7 @@ public class CommandManager extends AbstractManager {
 			}
 			if (n == 0 && controlAck != b) {
 				System.err.println("Control ack timeout " + String.valueOf(b));
+				excListener.exeptionOccurred(new CommandException(new RuntimeException("Control ACK timeout")));
 			}
 		}
 	}

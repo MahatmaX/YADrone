@@ -37,14 +37,15 @@ public abstract class AbstractTCPManager implements Runnable {
 		this.inetaddr = inetaddr;
 	}
 
-	public boolean connect(int port) {
+	public boolean connect(int port) throws IOException 
+	{
 		try {
 			socket = new Socket(inetaddr, port);
 			socket.setSoTimeout(3000);
 		} catch (IOException e) {
 			e.printStackTrace();
 			connected = false;
-			return false;
+			throw e;
 		}
 		connected = true;
 		return true;

@@ -2,6 +2,7 @@ package de.yadrone.apps.controlcenter;
 
 import java.awt.Dimension;
 import java.awt.Point;
+import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -69,6 +70,60 @@ public class CCPropertyManager extends Properties
 	public void setKeyboardCommandManagerAlternative(boolean isAlternative)
 	{
 		setProperty("keyboard_command_layout_alternative", isAlternative+"");
+		store();
+	}
+	
+	public String getVideoFormat()
+	{
+		String str = getProperty("video_format", "mp4");
+		return str;
+	}
+	
+	public void setVideoFormat(String format)
+	{
+		setProperty("video_format", format);
+		store();
+	}
+	
+	public String getVideoStoragePath()
+	{
+		try
+		{
+			File f = new File("./");
+			String str = getProperty("video_storage_path", f.getAbsolutePath());
+			return str;
+		}
+		catch(Exception exc)
+		{
+			return null;
+		}
+	}
+	
+	public void setVideoStoragePath(String path)
+	{
+		try
+		{
+			File f = new File(path);
+			if (!f.exists())
+				f.mkdirs();
+			
+			setProperty("video_storage_path", path);
+			store();
+		}
+		catch(Exception exc)
+		{
+			exc.printStackTrace();
+		}
+	}
+	
+	public String getVideoPlayFile() 
+	{
+		return getProperty("video_play_file", "");
+	}
+	
+	public void setVideoPlayFile(String fileName) 
+	{
+		setProperty("video_play_file", fileName);
 		store();
 	}
 	

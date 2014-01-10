@@ -21,16 +21,9 @@ public class TutorialCommander
 	
 	public void takeOffAndLand()
 	{
-		try
-		{
-			drone.getCommandManager().takeOff();
-			Thread.sleep(5000);
-			drone.getCommandManager().landing();
-		}
-		catch (InterruptedException e) // may happen because of Thread.sleep()
-		{
-			e.printStackTrace();
-		}
+		drone.getCommandManager().takeOff();
+		drone.getCommandManager().waitFor(5000);
+		drone.getCommandManager().landing();
 	}
 	
 	public void leftRightForwardBackward()
@@ -54,5 +47,14 @@ public class TutorialCommander
 		
 		cmd.landing();
 		
+		// alternative: asynchronous call
+//		cmd.takeOff();
+//		cmd.schedule(5000, new Runnable() { // schedule to be executed in 5 secs
+//			public void run()
+//			{
+//				cmd.goLeft(speed);
+//				// [...]
+//			}			
+//		});
 	}
 }

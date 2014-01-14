@@ -9,7 +9,7 @@ public class ConfigureIdsCommand extends ATCommand {
 	protected String userId;
 	protected String applicationId;
 
-	private ConfigureIdsCommand(String sessionId, String userId, String applicationId) {
+	public ConfigureIdsCommand(String sessionId, String userId, String applicationId) {
 		super();
 		this.sessionId = sessionId;
 		this.userId = userId;

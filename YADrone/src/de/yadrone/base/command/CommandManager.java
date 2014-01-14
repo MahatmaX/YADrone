@@ -33,8 +33,13 @@ import de.yadrone.base.manager.AbstractManager;
 import de.yadrone.base.navdata.CadType;
 import de.yadrone.base.utils.ARDroneUtils;
 
-public class CommandManager extends AbstractManager {
+public class CommandManager extends AbstractManager 
+{
 
+	public final static String APPLICATION_ID = "aabbccdd";
+	public final static String PROFILE_ID = "bbccddee";
+	public final static String SESSION_ID = "ccddeeff";
+	
 	private IExceptionListener excListener;
 	private CommandQueue q;
 	private Timer timer;
@@ -212,6 +217,19 @@ public class CommandManager extends AbstractManager {
 		return (float) (speed / 100.0f);
 	}
 
+	private CommandManager setMulticonfiguration()
+	{
+		q.add(new ConfigureCommand("custom:session_id", SESSION_ID));
+		q.add(new ConfigureCommand("custom:profile_id", PROFILE_ID));
+		q.add(new ConfigureCommand("custom:application_id", APPLICATION_ID));
+		return this;
+	}
+	
+	public CommandManager setConfigurationIds() {
+		q.add(new ConfigureIdsCommand(SESSION_ID, PROFILE_ID, APPLICATION_ID));
+		return this;
+	}
+	
 	/**
 	 * Set the current FPS of the live video codec.
 	 * @param fps  frames per second (min=15, max=30)
@@ -275,7 +293,7 @@ public class CommandManager extends AbstractManager {
 	 * @param b  If TRUE, video stream will be recorded
 	 */
 	public CommandManager setVideoOnUsb(boolean b) {
-		q.add(new ConfigureCommand("video:video_on_usb", b));
+		q.add(new ConfigureCommand("video:video_on_usb", b ? "TRUE" : "FALSE"));
 		return this;
 	}
 
@@ -648,7 +666,7 @@ public class CommandManager extends AbstractManager {
 		return this;
 	}
 
-	public CommandManager stopRecording() {
+	public CommandManager stopRecordingNavData() {
 		q.add(new ConfigureCommand("userbox:userbox_cmd", UserBox.STOP.ordinal()));
 		return this;
 	}
@@ -849,7 +867,17 @@ public class CommandManager extends AbstractManager {
 		System.out.println("doStop() called ? " + doStop + " ... Stopped " + getClass().getSimpleName());
 	}
 
-	private CommandManager initARDrone() {
+	private CommandManager initARDrone() 
+	{
+		new Thread(new Runnable() {
+			public void run()
+			{
+				setMulticonfiguration();
+			}			
+		}).start();;
+		
+		waitFor(5000);
+		
 		// pmode parameter and first misc parameter are related
 		sendPMode(2);
 		sendMisc(2, 20, 2000, 3000);
@@ -867,7 +895,16 @@ public class CommandManager extends AbstractManager {
 		if (!(c instanceof KeepAliveCommand)) {
 			 System.out.println("CommandManager: send " + c.getCommandString(seq));
 		}
-		byte[] buffer = c.getPacket(seq++);
+		
+		String config = "AT*CONFIG_IDS=" + (seq++) + ",\"" + CommandManager.SESSION_ID + "\",\"" + CommandManager.PROFILE_ID +"\",\"" + CommandManager.APPLICATION_ID + "\"" + "\r"; // AT*CONFIG_IDS=5,"aabbccdd","bbccddee","ccddeeff"
+		byte[] configPrefix = config.getBytes("ASCII");
+		
+		byte[] command = c.getPacket(seq++);
+		
+		byte[] buffer = new byte[configPrefix.length + command.length];
+		System.arraycopy(configPrefix, 0, buffer, 0, configPrefix.length);
+		System.arraycopy(command, 0, buffer, configPrefix.length, command.length);
+		
 		DatagramPacket packet = new DatagramPacket(buffer, buffer.length, inetaddr, ARDroneUtils.PORT);
 		socket.send(packet);
 	}

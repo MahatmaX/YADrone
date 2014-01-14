@@ -20,6 +20,7 @@ import de.yadrone.base.video.VideoDecoder;
 public class XugglerDecoder implements VideoDecoder
 {
 	private ImageListener listener;
+	private boolean doStop = false;
 
 	public void decode(InputStream is)
 	{
@@ -80,8 +81,10 @@ public class XugglerDecoder implements VideoDecoder
 		IPacket packet = IPacket.make();
 		long firstTimestampInStream = Global.NO_PTS;
 		long systemClockStartTime = 0;
-		while (container.readNextPacket(packet) >= 0)
+		// System.out.println("XugglerDecoder: Waiting to read first packet");
+		while (!doStop && container.readNextPacket(packet) >= 0)
 		{
+//			System.out.println("read next packet");
 			/*
 			 * Now we have a packet, let's see if it belongs to our video stream
 			 */
@@ -92,6 +95,7 @@ public class XugglerDecoder implements VideoDecoder
 				 */
 				IVideoPicture picture = IVideoPicture.make(videoCoder.getPixelType(), videoCoder.getWidth(), videoCoder.getHeight());
 
+//				System.out.println("packet belongs to video stream");
 				try
 				{
 					int offset = 0;
@@ -100,6 +104,7 @@ public class XugglerDecoder implements VideoDecoder
 						/*
 						 * Now, we decode the video, checking for any errors.
 						 */
+//						System.out.println("2 Need to decode");
 						int bytesDecoded = videoCoder.decodeVideo(picture, packet, offset);
 						if (bytesDecoded < 0)
 							throw new RuntimeException("got an error decoding single video frame");
@@ -113,6 +118,7 @@ public class XugglerDecoder implements VideoDecoder
 						 */
 						if (picture.isComplete())
 						{
+//							System.out.println("1 Picture complete");
 							IVideoPicture newPic = picture;
 							/*
 							 * If the resampler is not null, that means we didn't 
@@ -121,6 +127,7 @@ public class XugglerDecoder implements VideoDecoder
 							 */
 							if (resampler != null)
 							{
+//								System.out.println("2 Need to resample");
 								// we must resample
 								newPic = IVideoPicture.make(resampler.getOutputPixelFormat(), picture.getWidth(), picture.getHeight());
 								if (resampler.resample(newPic, picture) < 0)
@@ -179,6 +186,7 @@ public class XugglerDecoder implements VideoDecoder
 							}
 	
 							// And finally, convert the BGR24 to an Java buffered image
+//							System.out.println("3 create BufferedImage");
 							BufferedImage javaImage = Utils.videoPictureToImage(newPic);
 	
 							// and display it on the Java Swing window
@@ -196,6 +204,7 @@ public class XugglerDecoder implements VideoDecoder
 			}
 			else
 			{
+				// System.out.println("Packet does not belong to video stream");
 				/*
 				 * This packet isn't part of our video stream, so we just
 				 * silently drop it.
@@ -223,6 +232,11 @@ public class XugglerDecoder implements VideoDecoder
 		}
 	}
 
+	public void stop()
+	{
+		doStop = true;
+	}
+	
 	public void setImageListener(ImageListener listener)
 	{
 		this.listener = listener;

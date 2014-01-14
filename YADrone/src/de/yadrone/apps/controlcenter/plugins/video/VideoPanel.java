@@ -2,6 +2,7 @@ package de.yadrone.apps.controlcenter.plugins.video;
 
 
 import java.awt.Dimension;
+import java.awt.Graphics;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Insets;
@@ -16,6 +17,7 @@ import java.util.concurrent.TimeUnit;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JFileChooser;
 import javax.swing.JPanel;
@@ -26,6 +28,7 @@ import com.xuggle.mediatool.IMediaReader;
 import com.xuggle.mediatool.IMediaWriter;
 import com.xuggle.mediatool.MediaListenerAdapter;
 import com.xuggle.mediatool.ToolFactory;
+import com.xuggle.mediatool.event.ICloseEvent;
 import com.xuggle.mediatool.event.IVideoPictureEvent;
 import com.xuggle.xuggler.ICodec;
 
@@ -35,7 +38,7 @@ import de.yadrone.base.IARDrone;
 import de.yadrone.base.command.VideoCodec;
 import de.yadrone.base.video.ImageListener;
 
-public class VideoPanel extends JPanel implements ICCPlugin
+public class VideoPanel extends JPanel implements ICCPlugin, ImageListener
 {
 	public final static String FORMAT_MP4 = "MPEG-4";
 	public final static String FORMAT_H264 = "H.264";
@@ -54,18 +57,23 @@ public class VideoPanel extends JPanel implements ICCPlugin
 	
 	private CCPropertyManager props;
 	
+	private int imageWidth;
+	private int imageHeight;
+	private boolean doScaleImage;
+	
 	public VideoPanel()
 	{
 		super(new GridBagLayout());
 		
 		props = CCPropertyManager.getInstance();
+		doScaleImage = props.isScaleVideo();
 	}
 	
 	public void activate(IARDrone drone)
 	{
 		this.drone = drone;
 		init();
-		drone.getVideoManager().addImageListener(video);
+		drone.getVideoManager().addImageListener(this);
 	}
 
 	private void init() 
@@ -74,19 +82,25 @@ public class VideoPanel extends JPanel implements ICCPlugin
 
 		// record -----------------------------------------------------------------------
 		
-		recordFormatComboBox = new JComboBox(new String[] {FORMAT_MP4});
+		recordFormatComboBox = new JComboBox(new String[] {FORMAT_MP4, FORMAT_H264}); // + FORMAT_MP4_USB, 
+		recordFormatComboBox.setSelectedItem(props.getVideoFormat());
 		recordFormatComboBox.addActionListener(new ActionListener() {
 			
-			public void actionPerformed(ActionEvent e) {
+			public void actionPerformed(ActionEvent e) 
+			{
 				props.setVideoFormat(recordFormatComboBox.getSelectedItem()+"");
+				
 				if (recordFormatComboBox.getSelectedItem().equals(FORMAT_MP4))
 					drone.getCommandManager().setVideoCodec(VideoCodec.MP4_360P);
 				else if (recordFormatComboBox.getSelectedItem().equals(FORMAT_H264))
 					drone.getCommandManager().setVideoCodec(VideoCodec.H264_720P);
+				else if (recordFormatComboBox.getSelectedItem().equals(FORMAT_MP4_USB))
+					drone.getCommandManager().setVideoCodec(VideoCodec.MP4_360P_H264_360P);
+				
+				drone.getVideoManager().reinitialize();
 			}
 		});
 		
-		recordFormatComboBox.setSelectedItem(props.getVideoFormat());
 		if (props.getVideoFormat().equals(FORMAT_MP4))
 		{
 			drone.getCommandManager().setVideoCodec(VideoCodec.MP4_360P);
@@ -95,10 +109,27 @@ public class VideoPanel extends JPanel implements ICCPlugin
 		{
 			drone.getCommandManager().setVideoCodec(VideoCodec.H264_720P);
 		}
-		else if (props.getVideoFormat().equals(FORMAT_MP4_USB))
-		{
-			drone.getCommandManager().setVideoOnUsb(true);
-		}
+//		else if (props.getVideoFormat().equals(FORMAT_MP4_USB))
+//		{
+//			drone.getCommandManager().setVideoCodec(VideoCodec.MP4_360P_H264_360P);
+//		}
+		
+		// scale -----------------------------------------------------------------------
+		
+		final JCheckBox scaleImage = new JCheckBox("Scale image to fit window", props.isScaleVideo());
+		ActionListener scaleListener = new ActionListener() {
+			public void actionPerformed(ActionEvent event)
+			{
+				doScaleImage = scaleImage.isSelected();
+				props.setScaleVideo(scaleImage.isSelected());
+			}			
+		};
+		scaleImage.addActionListener(scaleListener);
+		
+		JPanel scalePanel = new JPanel(new GridBagLayout());
+		scalePanel.add(scaleImage, new GridBagConstraints(0, 0, 1, 1, 1, 0, GridBagConstraints.FIRST_LINE_START, GridBagConstraints.HORIZONTAL, new Insets(0,0,0,0), 0, 0));
+	    
+		// record-----------------------------------------------------------------------
 		
 		recordButton = new JButton("Record");
 		recordButton.addActionListener(new ActionListener() 
@@ -124,14 +155,20 @@ public class VideoPanel extends JPanel implements ICCPlugin
 			{
 				if (recordButton.getText().equals("Record"))
 				{
-					boolean isMp4 = true; // not working due to error in h.264 codec ... props.getVideoFormat().equals(FORMAT_MP4) || props.getVideoFormat().equals(FORMAT_MP4_H264);
+					boolean isMp4Usb = props.getVideoFormat().equals(FORMAT_MP4_USB);
+					if (isMp4Usb)
+					{
+						drone.getCommandManager().setVideoCodec(VideoCodec.MP4_360P_H264_720P);
+						drone.getCommandManager().setVideoOnUsb(true);
+					}
+					boolean isMp4 = props.getVideoFormat().equals(FORMAT_MP4) || isMp4Usb; // not working due to error in h.264 codec ... props.getVideoFormat().equals(FORMAT_MP4) || props.getVideoFormat().equals(FORMAT_MP4_H264);
 					
 					SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss");
-					String fileName = recordPathLocation.getText() + File.separatorChar + sdf.format(Calendar.getInstance().getTime()) + (isMp4 ? ".mp4" : ".h264");
+					String fileName = recordPathLocation.getText() + File.separatorChar + sdf.format(Calendar.getInstance().getTime()) + (isMp4 ? ".mp4" : ".mp4");
 					System.out.println("VideoPanel: Start recording to " + fileName);
 					
 					writer = ToolFactory.makeWriter(fileName);
-					writer.addVideoStream(0,  0, isMp4 ? ICodec.ID.CODEC_ID_MPEG4 : ICodec.ID.CODEC_ID_H264, 640, 360);
+					writer.addVideoStream(0,  0, isMp4 ? ICodec.ID.CODEC_ID_MPEG4 : ICodec.ID.CODEC_ID_H264, imageWidth, imageHeight);
 					
 					startTime = System.nanoTime();
 					
@@ -141,11 +178,16 @@ public class VideoPanel extends JPanel implements ICCPlugin
 					recordPathChooserButton.setEnabled(false);
 					recordPathLocation.setEnabled(false);
 					recordFormatComboBox.setEnabled(false);
+					
+					playButton.setEnabled(false);
 				}
 				else // do stop
 				{
 					if (props.getVideoFormat().equals(FORMAT_MP4_USB))
+					{
+//						drone.getCommandManager().setVideoCodec(VideoCodec.MP4_360P); // reset video codec, just to make sure: Attention: what if the user chose H.264 codec ? Do I really need this ?
 						drone.getCommandManager().setVideoOnUsb(false);
+					}
 					
 					drone.getVideoManager().removeImageListener(imageListener);
 					
@@ -153,6 +195,8 @@ public class VideoPanel extends JPanel implements ICCPlugin
 					recordPathChooserButton.setEnabled(true);
 					recordPathLocation.setEnabled(true);
 					recordFormatComboBox.setEnabled(true);
+					
+					playButton.setEnabled(true);
 					
 					try
 					{
@@ -188,7 +232,7 @@ public class VideoPanel extends JPanel implements ICCPlugin
 		recordPanel.add(recordButton, new GridBagConstraints(0, 0, 1, 1, 0, 0, GridBagConstraints.FIRST_LINE_START, GridBagConstraints.VERTICAL, new Insets(0,0,0,0), 0, 0));
 		recordPanel.add(recordPathLocation, new GridBagConstraints(1, 0, 1, 1, 1, 1, GridBagConstraints.FIRST_LINE_START, GridBagConstraints.BOTH, new Insets(0,0,0,0), 0, 0));
 		recordPanel.add(recordPathChooserButton, new GridBagConstraints(2, 0, 1, 1, 0, 0, GridBagConstraints.FIRST_LINE_START, GridBagConstraints.VERTICAL, new Insets(0,0,0,0), 0, 0));
-//		recordPanel.add(recordFormatComboBox, new GridBagConstraints(3, 0, 1, 1, 0, 0, GridBagConstraints.FIRST_LINE_START, GridBagConstraints.NONE, new Insets(0,0,0,0), 0, 0));
+		recordPanel.add(recordFormatComboBox, new GridBagConstraints(3, 0, 1, 1, 0, 0, GridBagConstraints.FIRST_LINE_START, GridBagConstraints.NONE, new Insets(0,0,0,0), 0, 0));
 		
 		// play -----------------------------------------------------------------------
 		
@@ -199,7 +243,7 @@ public class VideoPanel extends JPanel implements ICCPlugin
 				if (playButton.getText().equals("Play"))
 				{
 					playButton.setText("Stop");
-					drone.getVideoManager().removeImageListener(video); // remove listener and add it again once stop is pressed
+					drone.getVideoManager().removeImageListener(VideoPanel.this); // remove listener and add it again once stop is pressed
 					
 					new Thread(new Runnable() {
 						public void run() {
@@ -209,12 +253,19 @@ public class VideoPanel extends JPanel implements ICCPlugin
 							IMediaReader reader = ToolFactory.makeReader(fileName);
 							reader.setBufferedImageTypeToGenerate(BufferedImage.TYPE_3BYTE_BGR);
 							MediaListenerAdapter adapter = new MediaListenerAdapter() {
-								public void onVideoPicture(final IVideoPictureEvent event) {
+								
+								public void onVideoPicture(final IVideoPictureEvent event) 
+								{
 									SwingUtilities.invokeLater(new Runnable() {
 										public void run() {
 											video.imageUpdated(event.getImage());
 										}
 									});
+								}
+								
+								public void onClose(ICloseEvent event)
+								{
+									playButton.doClick();
 								}
 							};
 							
@@ -222,11 +273,15 @@ public class VideoPanel extends JPanel implements ICCPlugin
 							while (reader.readPacket() == null); // start reading
 						}
 					}).start();
+					
+					recordButton.setEnabled(false);
 				}
 				else
 				{
 					playButton.setText("Play");
-					drone.getVideoManager().addImageListener(video);
+					drone.getVideoManager().addImageListener(VideoPanel.this);
+					
+					recordButton.setEnabled(true);
 				}
 			}
 		});
@@ -258,8 +313,9 @@ public class VideoPanel extends JPanel implements ICCPlugin
 		// options -----------------------------------------------------------------------
 		
 		JPanel options = new JPanel(new GridBagLayout());
-		options.add(recordPanel, new GridBagConstraints(0, 0, 1, 1, 1, 1, GridBagConstraints.FIRST_LINE_START, GridBagConstraints.BOTH, new Insets(0,0,0,0), 0, 0));
-		options.add(playPanel, new GridBagConstraints(0, 1, 1, 1, 1, 1, GridBagConstraints.FIRST_LINE_START, GridBagConstraints.BOTH, new Insets(0,0,0,0), 0, 0));
+		options.add(scalePanel, new GridBagConstraints(0, 0, 1, 1, 1, 0, GridBagConstraints.FIRST_LINE_START, GridBagConstraints.HORIZONTAL, new Insets(0,0,0,0), 0, 0));
+		options.add(recordPanel, new GridBagConstraints(0, 1, 1, 1, 1, 1, GridBagConstraints.FIRST_LINE_START, GridBagConstraints.BOTH, new Insets(0,0,0,0), 0, 0));
+		options.add(playPanel, new GridBagConstraints(0, 2, 1, 1, 1, 1, GridBagConstraints.FIRST_LINE_START, GridBagConstraints.BOTH, new Insets(0,0,0,0), 0, 0));
 		
 		Dimension dim = new Dimension(640, 100);
 		options.setMinimumSize(dim);
@@ -273,7 +329,7 @@ public class VideoPanel extends JPanel implements ICCPlugin
 
 	public void deactivate()
 	{
-		drone.getVideoManager().removeImageListener(video);
+		drone.getVideoManager().removeImageListener(this);
 	}
 
 	public String getTitle()
@@ -304,5 +360,24 @@ public class VideoPanel extends JPanel implements ICCPlugin
 	public JPanel getPanel()
 	{
 		return this;
+	}
+
+	@Override
+	public void imageUpdated(BufferedImage image)
+	{
+		imageWidth = image.getWidth();
+		imageHeight = image.getHeight();
+		
+		if (doScaleImage)
+		{
+			BufferedImage newImage = new BufferedImage(video.getWidth(), video.getHeight(), BufferedImage.TYPE_INT_RGB);
+
+			Graphics g = newImage.createGraphics();
+			g.drawImage(image, 0, 0, video.getWidth(), video.getHeight(), null);
+			g.dispose();
+			
+			image = newImage;
+		}
+		video.imageUpdated(image);
 	}
 }

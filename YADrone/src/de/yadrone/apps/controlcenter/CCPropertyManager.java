@@ -75,7 +75,7 @@ public class CCPropertyManager extends Properties
 	
 	public String getVideoFormat()
 	{
-		String str = getProperty("video_format", "mp4");
+		String str = getProperty("video_format", "H.264");
 		return str;
 	}
 	
@@ -124,6 +124,17 @@ public class CCPropertyManager extends Properties
 	public void setVideoPlayFile(String fileName) 
 	{
 		setProperty("video_play_file", fileName);
+		store();
+	}
+	
+	public boolean isScaleVideo()
+	{
+		return Boolean.parseBoolean(getProperty("video_scale", "false"));
+	}
+	
+	public void setScaleVideo(boolean scaleVideo)
+	{
+		setProperty("video_scale", scaleVideo+"");
 		store();
 	}
 	

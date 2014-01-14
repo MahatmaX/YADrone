@@ -28,6 +28,7 @@ import de.yadrone.base.exception.IExceptionListener;
 import de.yadrone.base.exception.VideoException;
 import de.yadrone.base.manager.AbstractTCPManager;
 import de.yadrone.base.utils.ARDroneUtils;
+import de.yadrone.base.video.xuggler.XugglerDecoder;
 
 public class VideoManager extends AbstractTCPManager implements ImageListener 
 {
@@ -76,17 +77,43 @@ public class VideoManager extends AbstractTCPManager implements ImageListener
 		return super.connect(port);
 	}
 
+	public void reinitialize()
+	{
+		System.out.println("VideoManager: reinitialize video stream ...");
+		close();
+		System.out.println("VideoManager: previous stream closed ...");
+		try
+		{
+			System.out.println("VideoManager: create new decoder");
+			decoder.stop();
+			decoder = (VideoDecoder)decoder.getClass().newInstance();
+			decoder.setImageListener(this);
+			
+			Thread.sleep(1000);
+		}
+		catch (Exception e)
+		{
+			e.printStackTrace();
+		}
+		System.out.println("VideoManager: start connecting again ...");
+		new Thread(this).start();
+	}
+	
 	@Override
 	public void run() {
 		if (decoder == null)
 			return;
 		try
 		{
+			System.out.println("VideoManager: connect ");
 			connect(ARDroneUtils.VIDEO_PORT);
+			
+			System.out.println("VideoManager: tickle ");
 			ticklePort(ARDroneUtils.VIDEO_PORT);
 			
-			manager.setVideoBitrateControl(VideoBitRateMode.DISABLED); // bitrate set to maximum
+//			manager.setVideoBitrateControl(VideoBitRateMode.DISABLED); // bitrate set to maximum
 			
+			System.out.println("VideoManager: decode ");
 			decoder.decode(getInputStream());
 		}
 		catch(Exception exc)

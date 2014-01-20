@@ -18,6 +18,7 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.SwingUtilities;
+import javax.swing.text.DefaultCaret;
 
 import de.yadrone.apps.controlcenter.ICCPlugin;
 import de.yadrone.base.IARDrone;
@@ -42,6 +43,8 @@ public class ConsolePanel extends JPanel implements ICCPlugin
 		text = new JTextArea("Waiting for State ...");
 //		text.setEditable(false);
 		text.setFont(new Font("Courier", Font.PLAIN, 10));
+		DefaultCaret caret = (DefaultCaret)text.getCaret(); // auto scroll
+		caret.setUpdatePolicy(DefaultCaret.ALWAYS_UPDATE);
 		
 		add(new JScrollPane(text), new GridBagConstraints(0,0,1,1,1,1,GridBagConstraints.FIRST_LINE_START, GridBagConstraints.BOTH, new Insets(0,0,0,0), 0, 0));
 		add(checkBox, new GridBagConstraints(0,1,1,1,1,0,GridBagConstraints.FIRST_LINE_START, GridBagConstraints.NONE, new Insets(0,0,0,0), 0, 0));
@@ -85,12 +88,13 @@ public class ConsolePanel extends JPanel implements ICCPlugin
 		}
 	}
 
-	private void updateTextArea(final String text)
+	private void updateTextArea(final String str)
 	{
 		SwingUtilities.invokeLater(new Runnable() {
 			public void run()
 			{
-				ConsolePanel.this.text.append(text);
+				text.append(str);
+				text.setCaretPosition(text.getDocument().getLength());
 			}
 		});
 	}

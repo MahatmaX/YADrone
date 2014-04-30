@@ -107,8 +107,7 @@ public class ARDrone implements IARDrone, IExceptionListener {
 		
 		if (videoManager == null) {
 			InetAddress ia = getInetAddress();
-			CommandManager cm = getCommandManager();
-			videoManager = new VideoManager(ia, cm, videoDecoder, this);
+			videoManager = new VideoManager(ia, videoDecoder, this);
 			videoManager.start();
 		}
 		return videoManager;
@@ -187,7 +186,13 @@ public class ARDrone implements IARDrone, IExceptionListener {
 	@Override
 	public void takeOff() {
 		if (commandManager != null)
+		{
+			// we send emergency command before we take off which will toggle emergency mode off if the drone is actualy in emergency mode
+			// contributed by Naushad, see post on https://projects.ardrone.org/boards/1/topics/show/5259 from 30.04.2014
+	        commandManager.emergency();
+	        
 			commandManager.takeOff();
+		}
 	}
 
 	@Override

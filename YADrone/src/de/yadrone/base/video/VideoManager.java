@@ -36,14 +36,11 @@ public class VideoManager extends AbstractTCPManager implements ImageListener
 	
 	private VideoDecoder decoder;
 
-	private CommandManager manager = null;
-
 	private ArrayList<ImageListener> listener = new ArrayList<ImageListener>();
 
-	public VideoManager(InetAddress inetaddr, CommandManager manager, VideoDecoder decoder, IExceptionListener excListener) 
+	public VideoManager(InetAddress inetaddr, VideoDecoder decoder, IExceptionListener excListener) 
 	{
 		super(inetaddr);
-		this.manager = manager;
 		this.decoder = decoder;
 		this.excListener = excListener;
 	}

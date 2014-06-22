@@ -45,6 +45,8 @@ public class CommandManager extends AbstractManager
 	private Timer timer;
 
 	private static int seq = 1;
+	
+	private boolean debug = false;
 
 	public CommandManager(InetAddress inetaddr, IExceptionListener excListener) {
 		super(inetaddr);
@@ -892,7 +894,7 @@ public class CommandManager extends AbstractManager
 	}
 
 	private synchronized void sendCommand(ATCommand c) throws InterruptedException, IOException {
-		if (!(c instanceof KeepAliveCommand)) {
+		if (!(c instanceof KeepAliveCommand) && debug) {
 			 System.out.println("CommandManager: send " + c.getCommandString(seq));
 		}
 		
@@ -945,6 +947,10 @@ public class CommandManager extends AbstractManager
 				excListener.exeptionOccurred(new CommandException(new RuntimeException("Control ACK timeout")));
 			}
 		}
+	}
+	
+	public void debugEnable(boolean val) {
+		debug = val;
 	}
 
 }
